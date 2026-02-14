@@ -47,6 +47,9 @@ TUYA_TIMEOUT_MS=5000
 # Scan device Tuya di jaringan (opsional)
 TUYA_SCAN_TIMEOUT_SEC=8
 TUYA_SCAN_VERSIONS=3.3,3.1
+
+# Timezone (default: Asia/Jakarta)
+TZ=Asia/Jakarta
 ```
 
 ## Contoh request (curl)

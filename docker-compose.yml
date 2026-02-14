@@ -1,6 +1,6 @@
 services:
   tuya-api:
-    image: denoland/deno:2.6
+    image: denoland/deno:2.6.9
     working_dir: /app
     volumes:
       - .:/app

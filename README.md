@@ -14,29 +14,12 @@ deno task dev
 deno task test
 ```
 
-## Contoh .env
+## Konfigurasi .env
 
-```env
-# Smartplug device (contoh)
-TUYA_SMARTPLUG_ID=a38f8867156175d341ccd4
-TUYA_SMARTPLUG_KEY=OfDMhmEE8)l2sWjl
-TUYA_SMARTPLUG_IP=192.168.6.51
+Salin `.env.example` menjadi `.env` lalu isi kredensial sesuai device milikmu:
 
-# IR Blaster device (contoh)
-TUYA_IRBLASTER_ID=a3c391633371ced1ecnlpx
-TUYA_IRBLASTER_KEY="$81y'47jr<[R14*b"
-TUYA_IRBLASTER_IP=192.168.6.54
-
-# Versi device (bisa beda tiap device)
-TUYA_SMARTPLUG_VERSION=3.3
-TUYA_IRBLASTER_VERSION=3.1
-
-# Timeout (ms) untuk find/connect/get (opsional)
-TUYA_TIMEOUT_MS=5000
-
-# Scan device Tuya di jaringan (opsional)
-TUYA_SCAN_TIMEOUT_SEC=8
-TUYA_SCAN_VERSIONS=3.3,3.1
+```bash
+cp .env.example .env
 ```
 
 Catatan: Jika value `KEY` mengandung karakter khusus (mis. `$` atau `'`), gunakan tanda kutip ganda agar tidak salah dibaca.

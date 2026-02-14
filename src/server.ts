@@ -285,7 +285,11 @@ export function buildApp() {
   app.get("/api/smartplug/status", async (c) => {
     try {
       const result = await getSmartplugData();
-      return c.json(result.status === "ON");
+      return c.json({
+        datetime: result.datetime,
+        timezone: result.timezone,
+        status: result.status === "ON",
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 500);
@@ -304,8 +308,12 @@ export function buildApp() {
 
   app.get("/api/irblaster/status", async (c) => {
     try {
-      await getIrblasterData();
-      return c.json(true);
+      const result = await getIrblasterData();
+      return c.json({
+        datetime: result.datetime,
+        timezone: result.timezone,
+        status: true,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return c.json({ error: message }, 500);

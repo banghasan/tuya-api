@@ -1,0 +1,13 @@
+services:
+  tuya-api:
+    image: denoland/deno:1.46.3
+    working_dir: /app
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DENO_DIR=/app/.deno
+    ports:
+      - "8000:8000"
+    command: ["deno", "task", "start"]

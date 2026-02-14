@@ -81,3 +81,19 @@ curl http://localhost:8000/api/devices/list
 ```
 
 Output list menampilkan `id` dan `ip`.
+
+## Docker (tanpa build image)
+
+Jalankan dengan Docker Compose:
+
+```bash
+docker compose up
+```
+
+Compose akan membaca `.env` otomatis.
+
+Jika ingin mode dev:
+
+```bash
+docker compose run --rm -e DENO_DIR=/app/.deno tuya-api deno task dev
+```

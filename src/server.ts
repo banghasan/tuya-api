@@ -367,9 +367,6 @@ export function buildApp() {
   app.get("/", (c) => c.text("Tuya API: OK"));
 
   app.get("/smartplug", (c) => {
-    if (!verifyApiKeyForDashboard(c)) {
-      return c.text("Unauthorized", 401);
-    }
     const apiKey = getApiKey() ?? "";
     const urlParams = new URL(c.req.url).searchParams;
     const refreshParam = urlParams.get("refresh");
@@ -394,7 +391,7 @@ export function buildApp() {
       1,
       Number.isFinite(Number(ampereMaxParam)) ? Number(ampereMaxParam) : 10,
     );
-    const safeKey = escapeHtml(apiKey);
+    const requiresKey = apiKey ? "1" : "0";
     const safeRefresh = Number.isFinite(refreshMs) ? String(refreshMs) : "2000";
     const safePoints = Number.isFinite(maxPoints) ? String(maxPoints) : "120";
     const safeWattMax = Number.isFinite(maxWatt) ? String(maxWatt) : "2000";
@@ -614,6 +611,12 @@ export function buildApp() {
         opacity: 1;
         transform: translate(-50%, 140%) scale(1);
       }
+      .icon-btn.dim {
+        background: var(--panel-strong);
+        color: var(--muted);
+        border-color: rgba(148, 163, 184, 0.2);
+        box-shadow: none;
+      }
       .icon-btn.primary {
         background: rgba(52, 211, 153, 0.18);
         color: #34d399;
@@ -678,6 +681,54 @@ export function buildApp() {
       .legend-swatch.ampere {
         background: #34d399;
       }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(6, 12, 24, 0.65);
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        backdrop-filter: blur(4px);
+      }
+      .modal.hidden {
+        display: none;
+      }
+      .modal-card {
+        width: min(420px, 100%);
+        background: var(--panel);
+        border-radius: 16px;
+        padding: 22px;
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: var(--shadow);
+        display: grid;
+        gap: 12px;
+      }
+      .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .modal-subtitle {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      #key-input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: #0f172a;
+        color: var(--text);
+        font-size: 14px;
+      }
+      #key-input:focus {
+        outline: none;
+        border-color: rgba(56, 189, 248, 0.6);
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
       .tooltip {
         position: absolute;
         padding: 8px 10px;
@@ -701,7 +752,7 @@ export function buildApp() {
     </style>
   </head>
   <body>
-    <div class="shell" data-api-key="${safeKey}" data-refresh="${safeRefresh}" data-points="${safePoints}" data-watt-max="${safeWattMax}" data-ampere-max="${safeAmpereMax}">
+    <div class="shell" data-requires-key="${requiresKey}" data-refresh="${safeRefresh}" data-points="${safePoints}" data-watt-max="${safeWattMax}" data-ampere-max="${safeAmpereMax}">
       <header>
         <div class="title">
           <h1>Smartplug Dashboard</h1>
@@ -727,6 +778,12 @@ export function buildApp() {
             <button id="btn-refresh" class="icon-btn" aria-label="Refresh" data-tip="Refresh">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button id="btn-key" class="icon-btn dim" aria-label="Ganti API Key" data-tip="Ganti API Key">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 3l-8.5 8.5a4.5 4.5 0 1 1-1.5-1.5L19.5 1.5 21 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 7l1 1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </button>
           </div>
@@ -805,15 +862,26 @@ export function buildApp() {
         <div id="error" class="error"></div>
       </section>
     </div>
+    <div id="key-modal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <div class="modal-title">Masukkan API Key</div>
+        <div class="modal-subtitle">Key disimpan di session browser (tidak tampil di URL).</div>
+        <input id="key-input" type="password" placeholder="TUYA_API_KEY" autocomplete="off" />
+        <div class="modal-actions">
+          <button id="key-save" class="icon-btn primary">Simpan</button>
+        </div>
+        <div id="key-error" class="error"></div>
+      </div>
+    </div>
     <script>
       const root = document.querySelector(".shell");
       const dataset = root && root.dataset ? root.dataset : {};
-      const apiKey = dataset.apiKey ? dataset.apiKey : "";
+      const requiresKey = dataset.requiresKey === "1";
       const refreshMs = Number(dataset.refresh || "2000") || 2000;
       const maxPoints = Number(dataset.points || "120") || 120;
       const maxWatt = Number(dataset.wattMax || "2000") || 2000;
       const maxAmpere = Number(dataset.ampereMax || "10") || 10;
-      const headers = apiKey ? { "x-api-key": apiKey } : {};
+      const headers = {};
 
       const statusPill = document.getElementById("status-pill");
       const statusText = document.getElementById("status-text");
@@ -828,6 +896,7 @@ export function buildApp() {
       const btnOn = document.getElementById("btn-on");
       const btnOff = document.getElementById("btn-off");
       const btnRefresh = document.getElementById("btn-refresh");
+      const btnKey = document.getElementById("btn-key");
       const chart = document.getElementById("chart");
       const ctx = chart && chart.getContext ? chart.getContext("2d") : null;
       const tooltip = document.getElementById("chart-tooltip");
@@ -835,6 +904,73 @@ export function buildApp() {
       const gaugeAmpere = document.getElementById("gauge-ampere");
       const wattMeta = document.getElementById("watt-meta");
       const ampereMeta = document.getElementById("ampere-meta");
+      const keyModal = document.getElementById("key-modal");
+      const keyInput = document.getElementById("key-input");
+      const keySave = document.getElementById("key-save");
+      const keyError = document.getElementById("key-error");
+
+      const getStoredKey = () => {
+        try {
+          return sessionStorage.getItem("tuyaApiKey") || "";
+        } catch {
+          return "";
+        }
+      };
+      const setStoredKey = (value) => {
+        try {
+          sessionStorage.setItem("tuyaApiKey", value);
+        } catch {
+          return;
+        }
+      };
+      const applyHeaders = () => {
+        const stored = getStoredKey();
+        if (stored) headers["x-api-key"] = stored;
+        else delete headers["x-api-key"];
+      };
+      const showKeyModal = (message) => {
+        if (!keyModal) return;
+        if (keyError) keyError.textContent = message || "";
+        keyModal.classList.remove("hidden");
+        if (keyInput) keyInput.focus();
+      };
+      const hideKeyModal = () => {
+        if (!keyModal) return;
+        keyModal.classList.add("hidden");
+      };
+
+      const urlKey = new URL(window.location.href).searchParams.get("key");
+      if (urlKey) {
+        setStoredKey(urlKey);
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("key");
+        history.replaceState({}, "", cleanUrl.toString());
+      }
+      applyHeaders();
+      if (requiresKey && !getStoredKey()) {
+        showKeyModal("");
+      }
+
+      if (keySave && keyInput) {
+        keySave.addEventListener("click", () => {
+          const value = keyInput.value.trim();
+          if (!value) {
+            showKeyModal("API key wajib diisi.");
+            return;
+          }
+          setStoredKey(value);
+          applyHeaders();
+          hideKeyModal();
+          fetchData();
+        });
+      }
+      if (btnKey) {
+        btnKey.addEventListener("click", () => {
+          setStoredKey("");
+          applyHeaders();
+          showKeyModal("");
+        });
+      }
 
       if (gaugeArc || gaugeAmpere) {
         const r = 90;
@@ -1061,6 +1197,10 @@ export function buildApp() {
       const fetchData = async () => {
         try {
           const res = await fetch("/api/smartplug/current", { headers });
+          if (res.status === 401) {
+            showKeyModal("API key salah atau tidak ada.");
+            return;
+          }
           const data = await res.json();
           updateUI(data);
           startCountdown();
@@ -1078,6 +1218,10 @@ export function buildApp() {
             method: "POST",
             headers,
           });
+          if (res.status === 401) {
+            showKeyModal("API key salah atau tidak ada.");
+            return;
+          }
           const data = await res.json();
           updateUI(data);
         } catch (err) {

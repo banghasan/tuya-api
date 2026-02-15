@@ -53,6 +53,19 @@ function requireEnv(key: string): string {
   return value;
 }
 
+function getApiKey(): string | null {
+  return Deno.env.get("TUYA_API_KEY") ?? null;
+}
+
+function verifyApiKey(c: {
+  req: { header: (name: string) => string | undefined };
+}): boolean {
+  const expected = getApiKey();
+  if (!expected) return true;
+  const headerKey = c.req.header("x-api-key");
+  return headerKey === expected;
+}
+
 function getTimezone(): string {
   return Deno.env.get("TZ") ?? "Asia/Jakarta";
 }
@@ -322,6 +335,13 @@ export function buildApp() {
   const app = new Hono();
 
   app.get("/", (c) => c.text("Tuya API: OK"));
+
+  app.use("/api/*", async (c, next) => {
+    if (!verifyApiKey(c)) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    await next();
+  });
 
   app.get("/api/smartplug/current", async (c) => {
     try {

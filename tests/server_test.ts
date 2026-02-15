@@ -14,13 +14,20 @@ function setEnv() {
   Deno.env.set("TUYA_IRBLASTER_KEY", "irkey");
   Deno.env.set("TUYA_IRBLASTER_IP", "192.168.0.11");
   Deno.env.set("TUYA_IRBLASTER_VERSION", "3.1");
+  Deno.env.set("TUYA_API_KEY", "testkey");
+}
+
+function apiHeaders() {
+  return { "x-api-key": "testkey" };
 }
 
 Deno.test("/api/devices/list returns configured devices", async () => {
   setEnv();
   const app = buildApp();
 
-  const res = await app.request("http://localhost/api/devices/list");
+  const res = await app.request("http://localhost/api/devices/list", {
+    headers: apiHeaders(),
+  });
   assertEquals(res.status, 200);
 
   const body = await res.json();
@@ -35,7 +42,9 @@ Deno.test("/api/devices/list fails when env missing", async () => {
   Deno.env.delete("TUYA_SMARTPLUG_ID");
   const app = buildApp();
 
-  const res = await app.request("http://localhost/api/devices/list");
+  const res = await app.request("http://localhost/api/devices/list", {
+    headers: apiHeaders(),
+  });
   assertEquals(res.status, 500);
 
   const body = await res.json();
@@ -59,6 +68,7 @@ Deno.test("/api/devices/scan returns scanned devices", async () => {
         }),
       connect: async () => {},
       get: () => Promise.resolve({}),
+      set: () => Promise.resolve({}),
       disconnect: () => {},
     };
   });
@@ -66,6 +76,7 @@ Deno.test("/api/devices/scan returns scanned devices", async () => {
   const app = buildApp();
   const res = await app.request(
     "http://localhost/api/devices/scan?timeout=1&versions=3.1,3.3",
+    { headers: apiHeaders() },
   );
   assertEquals(res.status, 200);
 

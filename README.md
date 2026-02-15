@@ -23,6 +23,7 @@ cp .env.example .env
 ```
 
 Catatan: Jika value `KEY` mengandung karakter khusus (mis. `$` atau `'`), gunakan tanda kutip ganda agar tidak salah dibaca.
+Catatan keamanan: jika `TUYA_API_KEY` diisi, semua endpoint `/api/*` wajib mengirim header `x-api-key`. Jika kosong, endpoint tetap terbuka.
 
 Contoh isi `.env` (tanpa kredensial asli):
 
@@ -50,21 +51,31 @@ TUYA_SCAN_VERSIONS=3.3,3.1
 
 # Timezone (default: Asia/Jakarta)
 TZ=Asia/Jakarta
+
+# API key untuk proteksi endpoint ON/OFF (opsional)
+TUYA_API_KEY=change_this_key
 ```
 
 ## Contoh request (curl)
 
 ```bash
-curl http://localhost:8000/api/smartplug/current
+curl -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/current
+```
+
+Jika API key salah / tidak dikirim:
+```json
+{
+  "error": "Unauthorized"
+}
 ```
 
 ```bash
-curl http://localhost:8000/api/smartplug/status
+curl -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/status
 ```
 
 ```bash
 # nyalakan smartplug (GET)
-curl http://localhost:8000/api/smartplug/on
+curl -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/on
 ```
 
 Contoh response:
@@ -93,7 +104,7 @@ Jika device offline / IP tidak aktif:
 
 ```bash
 # matikan smartplug (GET)
-curl http://localhost:8000/api/smartplug/off
+curl -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/off
 ```
 
 Contoh response:
@@ -107,7 +118,7 @@ Contoh response:
 
 ```bash
 # nyalakan smartplug (POST)
-curl -X POST http://localhost:8000/api/smartplug/on
+curl -X POST -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/on
 ```
 
 Contoh response:
@@ -121,7 +132,7 @@ Contoh response:
 
 ```bash
 # matikan smartplug (POST)
-curl -X POST http://localhost:8000/api/smartplug/off
+curl -X POST -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/off
 ```
 
 Contoh response:
@@ -134,24 +145,24 @@ Contoh response:
 ```
 
 ```bash
-curl http://localhost:8000/api/irblaster/current
+curl -H "x-api-key: change_this_key" http://localhost:8000/api/irblaster/current
 ```
 
 ```bash
-curl http://localhost:8000/api/irblaster/status
+curl -H "x-api-key: change_this_key" http://localhost:8000/api/irblaster/status
 ```
 
 ```bash
-curl http://localhost:8000/api/devices/scan
+curl -H "x-api-key: change_this_key" http://localhost:8000/api/devices/scan
 ```
 
 ```bash
 # override via query params
-curl "http://localhost:8000/api/devices/scan?timeout=12&versions=3.1,3.3"
+curl -H "x-api-key: change_this_key" "http://localhost:8000/api/devices/scan?timeout=12&versions=3.1,3.3"
 ```
 
 ```bash
-curl http://localhost:8000/api/devices/list
+curl -H "x-api-key: change_this_key" http://localhost:8000/api/devices/list
 ```
 
 Output list menampilkan `id` dan `ip`.

@@ -611,9 +611,10 @@ export function buildApp() {
     </div>
     <script>
       const root = document.querySelector(".shell");
-      const apiKey = root?.dataset?.apiKey ?? "";
-      const refreshMs = Number(root?.dataset?.refresh ?? "2000") || 2000;
-      const maxPoints = Number(root?.dataset?.points ?? "120") || 120;
+      const dataset = root && root.dataset ? root.dataset : {};
+      const apiKey = dataset.apiKey ? dataset.apiKey : "";
+      const refreshMs = Number(dataset.refresh || "2000") || 2000;
+      const maxPoints = Number(dataset.points || "120") || 120;
       const headers = apiKey ? { "x-api-key": apiKey } : {};
 
       const statusPill = document.getElementById("status-pill");
@@ -629,7 +630,7 @@ export function buildApp() {
       const btnOff = document.getElementById("btn-off");
       const btnRefresh = document.getElementById("btn-refresh");
       const chart = document.getElementById("chart");
-      const ctx = chart?.getContext?.("2d");
+      const ctx = chart && chart.getContext ? chart.getContext("2d") : null;
       const tooltip = document.getElementById("chart-tooltip");
 
       const formatNumber = (value, unit, digits = 2) => {
@@ -654,7 +655,7 @@ export function buildApp() {
       };
 
       const pushHistory = (payload) => {
-        if (typeof payload?.watt !== "number" || typeof payload?.ampere !== "number") return;
+        if (!payload || typeof payload.watt !== "number" || typeof payload.ampere !== "number") return;
         history.watt.push(payload.watt);
         history.ampere.push(payload.ampere);
         history.ts.push(Date.now());
@@ -730,7 +731,7 @@ export function buildApp() {
         }
 
         ctx.fillStyle = "#e2e8f0";
-        ctx.font = "12px \"Space Grotesk\", sans-serif";
+        ctx.font = '12px "Space Grotesk", sans-serif';
         ctx.fillText("Watt", 12, 18);
         ctx.fillStyle = "#38bdf8";
         ctx.fillRect(50, 10, 12, 12);
@@ -789,13 +790,14 @@ export function buildApp() {
       };
 
       const updateUI = (payload) => {
-        setStatus(payload.status ?? "UNKNOWN");
+        setStatus(payload && payload.status ? payload.status : "UNKNOWN");
         elWatt.textContent = formatNumber(payload.watt, "W", 1);
         elVolt.textContent = formatNumber(payload.volt, "V", 1);
         elAmpere.textContent = formatNumber(payload.ampere, "A", 3);
         elTotal.textContent = formatNumber(payload.total_kwh, "kWh", 2);
-        elLast.textContent = payload.datetime ?? new Date().toISOString();
-        elError.textContent = payload.error ? payload.error : "";
+        elLast.textContent =
+          payload && payload.datetime ? payload.datetime : new Date().toISOString();
+        elError.textContent = payload && payload.error ? payload.error : "";
         pushHistory(payload);
         drawChart();
       };
@@ -836,7 +838,7 @@ export function buildApp() {
           startCountdown();
         } catch (err) {
           setStatus("OFFLINE");
-          elError.textContent = err?.message ?? "Gagal memuat data";
+          elError.textContent = err && err.message ? err.message : "Gagal memuat data";
         }
       };
 
@@ -851,24 +853,27 @@ export function buildApp() {
           const data = await res.json();
           updateUI(data);
         } catch (err) {
-          elError.textContent = err?.message ?? "Gagal mengubah status";
+          elError.textContent =
+            err && err.message ? err.message : "Gagal mengubah status";
         } finally {
           btnOn.disabled = false;
           btnOff.disabled = false;
         }
       };
 
-      btnOn?.addEventListener("click", () => sendPower(true));
-      btnOff?.addEventListener("click", () => sendPower(false));
-      btnRefresh?.addEventListener("click", fetchData);
+      if (btnOn) btnOn.addEventListener("click", () => sendPower(true));
+      if (btnOff) btnOff.addEventListener("click", () => sendPower(false));
+      if (btnRefresh) btnRefresh.addEventListener("click", fetchData);
 
       resizeChart();
       window.addEventListener("resize", () => {
         resizeChart();
         drawChart();
       });
-      chart?.addEventListener("mousemove", showTooltip);
-      chart?.addEventListener("mouseleave", hideTooltip);
+      if (chart) {
+        chart.addEventListener("mousemove", showTooltip);
+        chart.addEventListener("mouseleave", hideTooltip);
+      }
 
       fetchData();
       setInterval(fetchData, refreshMs);

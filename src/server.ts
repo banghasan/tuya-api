@@ -11,6 +11,7 @@ type TuyaDevice = {
   find: (...args: unknown[]) => Promise<unknown>;
   connect: () => Promise<void>;
   get: (options?: unknown) => Promise<unknown>;
+  set: (options?: unknown) => Promise<unknown>;
   disconnect: () => void;
   on?: (event: string, listener: (...args: unknown[]) => void) => void;
 };
@@ -222,6 +223,27 @@ async function getSmartplugData() {
   }
 }
 
+async function setSmartplugPower(powerOn: boolean) {
+  const device = createSmartplugDevice();
+  try {
+    if (!Deno.env.get("TUYA_SMARTPLUG_IP")) {
+      await withTimeout("find", device.find());
+    }
+    await withTimeout("connect", device.connect());
+    await withTimeout(
+      "set",
+      device.set({
+        dps: 1,
+        set: powerOn,
+      }),
+    );
+    const { datetime, timezone } = formatDateTimeTZ(new Date());
+    return { datetime, timezone, status: powerOn ? "ON" : "OFF" };
+  } finally {
+    device.disconnect();
+  }
+}
+
 function buildSmartplugOffline(errorMessage: string) {
   const { datetime, timezone } = formatDateTimeTZ(new Date());
   return {
@@ -323,6 +345,46 @@ export function buildApp() {
       const message = err instanceof Error ? err.message : String(err);
       const { datetime, timezone } = formatDateTimeTZ(new Date());
       return c.json({ datetime, timezone, status: false, error: message });
+    }
+  });
+
+  app.post("/api/smartplug/on", async (c) => {
+    try {
+      const result = await setSmartplugPower(true);
+      return c.json(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json(buildSmartplugOffline(message));
+    }
+  });
+
+  app.get("/api/smartplug/on", async (c) => {
+    try {
+      const result = await setSmartplugPower(true);
+      return c.json(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json(buildSmartplugOffline(message));
+    }
+  });
+
+  app.post("/api/smartplug/off", async (c) => {
+    try {
+      const result = await setSmartplugPower(false);
+      return c.json(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json(buildSmartplugOffline(message));
+    }
+  });
+
+  app.get("/api/smartplug/off", async (c) => {
+    try {
+      const result = await setSmartplugPower(false);
+      return c.json(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return c.json(buildSmartplugOffline(message));
     }
   });
 

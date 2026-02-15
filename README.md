@@ -63,6 +63,77 @@ curl http://localhost:8000/api/smartplug/status
 ```
 
 ```bash
+# nyalakan smartplug (GET)
+curl http://localhost:8000/api/smartplug/on
+```
+
+Contoh response:
+```json
+{
+  "datetime": "2026-02-15T10:12:30+07:00",
+  "timezone": "Asia/Jakarta",
+  "status": "ON"
+}
+```
+
+Jika device offline / IP tidak aktif:
+```json
+{
+  "datetime": "2026-02-15T10:12:30+07:00",
+  "timezone": "Asia/Jakarta",
+  "status": "OFFLINE",
+  "watt": null,
+  "volt": null,
+  "ampere": null,
+  "total_kwh": null,
+  "raw_dps": {},
+  "error": "connection timed out"
+}
+```
+
+```bash
+# matikan smartplug (GET)
+curl http://localhost:8000/api/smartplug/off
+```
+
+Contoh response:
+```json
+{
+  "datetime": "2026-02-15T10:12:35+07:00",
+  "timezone": "Asia/Jakarta",
+  "status": "OFF"
+}
+```
+
+```bash
+# nyalakan smartplug (POST)
+curl -X POST http://localhost:8000/api/smartplug/on
+```
+
+Contoh response:
+```json
+{
+  "datetime": "2026-02-15T10:12:40+07:00",
+  "timezone": "Asia/Jakarta",
+  "status": "ON"
+}
+```
+
+```bash
+# matikan smartplug (POST)
+curl -X POST http://localhost:8000/api/smartplug/off
+```
+
+Contoh response:
+```json
+{
+  "datetime": "2026-02-15T10:12:45+07:00",
+  "timezone": "Asia/Jakarta",
+  "status": "OFF"
+}
+```
+
+```bash
 curl http://localhost:8000/api/irblaster/current
 ```
 

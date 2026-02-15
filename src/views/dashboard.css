@@ -104,17 +104,34 @@ h1 {
   fill: none;
   stroke: rgba(255, 255, 255, 0.08);
   stroke-width: 14;
+  filter: drop-shadow(0 -2px 6px rgba(255, 255, 255, 0.08)) drop-shadow(
+    0
+    4px
+    10px
+    rgba(8, 15, 28, 0.5)
+  );
+}
+.gauge-highlight {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 140 999;
+  stroke-dashoffset: 8;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.25));
 }
 .gauge-arc {
   fill: none;
   stroke: url(#gaugeGradient);
-  stroke-width: 14;
+  stroke-width: 16;
   stroke-linecap: round;
   stroke-dasharray: 0 999;
   stroke-dashoffset: 0;
+  filter: drop-shadow(0 0 6px rgba(248, 113, 113, 0.45));
 }
 .gauge-arc.ampere {
   stroke: url(#ampereGradient);
+  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.45));
 }
 .gauge-center {
   position: absolute;
@@ -302,10 +319,10 @@ canvas {
   width: 14px;
   height: 14px;
   border-radius: 4px;
-  background: #38bdf8;
+  background: #f87171;
 }
 .legend-swatch.ampere {
-  background: #34d399;
+  background: #facc15;
 }
 .tooltip {
   position: absolute;

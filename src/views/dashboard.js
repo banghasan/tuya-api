@@ -203,8 +203,8 @@ const drawChart = () => {
     ctx.stroke();
   };
 
-  drawLine(history.watt, "#38bdf8");
-  drawLine(history.ampere, "#34d399");
+  drawLine(history.watt, "#f87171");
+  drawLine(history.ampere, "#facc15");
 
   if (
     hoverIndex !== null &&
@@ -230,8 +230,8 @@ const drawChart = () => {
     };
     const wVal = history.watt[hoverIndex];
     const aVal = history.ampere[hoverIndex];
-    if (typeof wVal === "number") dot(wVal, "#38bdf8");
-    if (typeof aVal === "number") dot(aVal, "#34d399");
+    if (typeof wVal === "number") dot(wVal, "#f87171");
+    if (typeof aVal === "number") dot(aVal, "#facc15");
   }
 };
 

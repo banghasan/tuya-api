@@ -86,3 +86,27 @@ Deno.test("/api/devices/scan returns scanned devices", async () => {
 
   resetTuyaFactoryForTest();
 });
+
+Deno.test("/api endpoint returns 401 when api key missing", async () => {
+  setEnv();
+  const app = buildApp();
+
+  const res = await app.request("http://localhost/api/devices/list");
+  assertEquals(res.status, 401);
+
+  const body = await res.json();
+  assertEquals(body.error, "Unauthorized");
+});
+
+Deno.test("/api endpoint returns 401 when api key invalid", async () => {
+  setEnv();
+  const app = buildApp();
+
+  const res = await app.request("http://localhost/api/devices/list", {
+    headers: { "x-api-key": "wrong" },
+  });
+  assertEquals(res.status, 401);
+
+  const body = await res.json();
+  assertEquals(body.error, "Unauthorized");
+});

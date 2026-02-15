@@ -66,6 +66,36 @@ function verifyApiKey(c: {
   return headerKey === expected;
 }
 
+function verifyApiKeyForDashboard(c: {
+  req: { header: (name: string) => string | undefined; url: string };
+}): boolean {
+  const expected = getApiKey();
+  if (!expected) return true;
+  const headerKey = c.req.header("x-api-key");
+  if (headerKey === expected) return true;
+  const urlKey = new URL(c.req.url).searchParams.get("key");
+  return urlKey === expected;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => {
+    switch (char) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      case "'":
+        return "&#39;";
+      default:
+        return char;
+    }
+  });
+}
+
 function getTimezone(): string {
   return Deno.env.get("TZ") ?? "Asia/Jakarta";
 }
@@ -335,6 +365,319 @@ export function buildApp() {
   const app = new Hono();
 
   app.get("/", (c) => c.text("Tuya API: OK"));
+
+  app.get("/smartplug", (c) => {
+    if (!verifyApiKeyForDashboard(c)) {
+      return c.text("Unauthorized", 401);
+    }
+    const apiKey = getApiKey() ?? "";
+    const refreshParam = new URL(c.req.url).searchParams.get("refresh");
+    const refreshMs = Math.max(
+      1000,
+      Number.isFinite(Number(refreshParam))
+        ? Number(refreshParam) * 1000
+        : 2000,
+    );
+    const safeKey = escapeHtml(apiKey);
+    const safeRefresh = Number.isFinite(refreshMs) ? String(refreshMs) : "2000";
+    const html = `<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smartplug Dashboard</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #0e1420;
+        --panel: #151d2b;
+        --panel-strong: #1b2536;
+        --text: #f2f5f9;
+        --muted: #9fb0c7;
+        --accent: #7dd3fc;
+        --accent-strong: #38bdf8;
+        --danger: #f87171;
+        --ok: #34d399;
+        --shadow: 0 20px 60px rgba(6, 12, 24, 0.45);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+        color: var(--text);
+        background: radial-gradient(1200px 800px at 10% -10%, #25314b, transparent),
+          radial-gradient(900px 600px at 90% 10%, #1c2c4c, transparent),
+          var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+      }
+      .shell {
+        width: min(920px, 100%);
+        display: grid;
+        gap: 24px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+      .title {
+        display: grid;
+        gap: 6px;
+      }
+      h1 {
+        font-size: clamp(24px, 3vw, 36px);
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .card {
+        background: linear-gradient(140deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: var(--shadow);
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      }
+      .stat {
+        background: var(--panel);
+        border-radius: 14px;
+        padding: 16px;
+        display: grid;
+        gap: 8px;
+      }
+      .stat span {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .stat strong {
+        font-size: 20px;
+        font-weight: 600;
+      }
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(52, 211, 153, 0.15);
+        color: var(--ok);
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .status-pill.off {
+        background: rgba(248, 113, 113, 0.15);
+        color: var(--danger);
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--accent);
+        color: #0c1322;
+        transition: transform 0.15s ease, box-shadow 0.2s ease;
+        box-shadow: 0 10px 24px rgba(56, 189, 248, 0.35);
+      }
+      button.secondary {
+        background: var(--panel-strong);
+        color: var(--text);
+        box-shadow: none;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .error {
+        color: var(--danger);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell" data-api-key="${safeKey}" data-refresh="${safeRefresh}">
+      <header>
+        <div class="title">
+          <h1>Smartplug Dashboard</h1>
+          <div class="subtitle">Monitoring real-time smartplug Tuya</div>
+        </div>
+        <div id="status-pill" class="status-pill">Muat data...</div>
+      </header>
+
+      <section class="card">
+        <div class="grid">
+          <div class="stat">
+            <span>Daya</span>
+            <strong id="watt">-</strong>
+          </div>
+          <div class="stat">
+            <span>Tegangan</span>
+            <strong id="volt">-</strong>
+          </div>
+          <div class="stat">
+            <span>Arus</span>
+            <strong id="ampere">-</strong>
+          </div>
+          <div class="stat">
+            <span>Total kWh</span>
+            <strong id="total">-</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="controls">
+          <button id="btn-on">Nyalakan</button>
+          <button id="btn-off" class="secondary">Matikan</button>
+          <button id="btn-refresh" class="secondary">Refresh</button>
+        </div>
+      </section>
+
+      <section class="footer card">
+        <div>Last update: <span id="last-update">-</span></div>
+        <div>Next refresh: <span id="next-refresh">-</span> <span id="next-refresh-at"></span></div>
+        <div id="error" class="error"></div>
+      </section>
+    </div>
+    <script>
+      const root = document.querySelector(".shell");
+      const apiKey = root?.dataset?.apiKey ?? "";
+      const refreshMs = Number(root?.dataset?.refresh ?? "2000") || 2000;
+      const headers = apiKey ? { "x-api-key": apiKey } : {};
+
+      const statusPill = document.getElementById("status-pill");
+      const elWatt = document.getElementById("watt");
+      const elVolt = document.getElementById("volt");
+      const elAmpere = document.getElementById("ampere");
+      const elTotal = document.getElementById("total");
+      const elLast = document.getElementById("last-update");
+      const elNext = document.getElementById("next-refresh");
+      const elNextAt = document.getElementById("next-refresh-at");
+      const elError = document.getElementById("error");
+      const btnOn = document.getElementById("btn-on");
+      const btnOff = document.getElementById("btn-off");
+      const btnRefresh = document.getElementById("btn-refresh");
+
+      const formatNumber = (value, unit, digits = 2) => {
+        if (value === null || value === undefined) return "-";
+        if (typeof value !== "number") return "-";
+        return value.toFixed(digits) + " " + unit;
+      };
+
+      const setStatus = (status) => {
+        statusPill.textContent = status;
+        statusPill.classList.toggle("off", status !== "ON");
+      };
+
+      const updateUI = (payload) => {
+        setStatus(payload.status ?? "UNKNOWN");
+        elWatt.textContent = formatNumber(payload.watt, "W", 1);
+        elVolt.textContent = formatNumber(payload.volt, "V", 1);
+        elAmpere.textContent = formatNumber(payload.ampere, "A", 3);
+        elTotal.textContent = formatNumber(payload.total_kwh, "kWh", 2);
+        elLast.textContent = payload.datetime ?? new Date().toISOString();
+        elError.textContent = payload.error ? payload.error : "";
+      };
+
+      let countdownTimer = null;
+      const startCountdown = () => {
+        if (!elNext) return;
+        if (countdownTimer) clearInterval(countdownTimer);
+        let remaining = Math.round(refreshMs / 1000);
+        const nextAt = new Date(Date.now() + refreshMs);
+        elNext.textContent = remaining + "s";
+        if (elNextAt) {
+          elNextAt.textContent =
+            "(" +
+            nextAt.toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            }) +
+            ")";
+        }
+        countdownTimer = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            return;
+          }
+          elNext.textContent = remaining + "s";
+        }, 1000);
+      };
+
+      const fetchData = async () => {
+        try {
+          const res = await fetch("/api/smartplug/current", { headers });
+          const data = await res.json();
+          updateUI(data);
+          startCountdown();
+        } catch (err) {
+          setStatus("OFFLINE");
+          elError.textContent = err?.message ?? "Gagal memuat data";
+        }
+      };
+
+      const sendPower = async (on) => {
+        btnOn.disabled = true;
+        btnOff.disabled = true;
+        try {
+          const res = await fetch(on ? "/api/smartplug/on" : "/api/smartplug/off", {
+            method: "POST",
+            headers,
+          });
+          const data = await res.json();
+          updateUI(data);
+        } catch (err) {
+          elError.textContent = err?.message ?? "Gagal mengubah status";
+        } finally {
+          btnOn.disabled = false;
+          btnOff.disabled = false;
+        }
+      };
+
+      btnOn?.addEventListener("click", () => sendPower(true));
+      btnOff?.addEventListener("click", () => sendPower(false));
+      btnRefresh?.addEventListener("click", fetchData);
+
+      fetchData();
+      setInterval(fetchData, refreshMs);
+    </script>
+  </body>
+</html>`;
+    return c.html(html);
+  });
 
   app.use("/api/*", async (c, next) => {
     if (!verifyApiKey(c)) {

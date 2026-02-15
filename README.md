@@ -24,6 +24,7 @@ cp .env.example .env
 
 Catatan: Jika value `KEY` mengandung karakter khusus (mis. `$` atau `'`), gunakan tanda kutip ganda agar tidak salah dibaca.
 Catatan keamanan: jika `TUYA_API_KEY` diisi, semua endpoint `/api/*` wajib mengirim header `x-api-key`. Jika kosong, endpoint tetap terbuka.
+Dashboard `/smartplug` bisa diakses dengan `?key=YOUR_KEY` jika `TUYA_API_KEY` diisi. Interval auto refresh default 2 detik, bisa diubah dengan `?refresh=10` (detik). Dashboard menampilkan countdown dan jam refresh berikutnya.
 
 Contoh isi `.env` (tanpa kredensial asli):
 
@@ -63,6 +64,7 @@ TUYA_SCAN_VERSIONS=3.3,3.1
 | Method | URL | Deskripsi | Auth |
 | --- | --- | --- | --- |
 | GET | `/` | Health check | Tidak |
+| GET | `/smartplug` | Dashboard monitoring smartplug | Query `?key=` jika `TUYA_API_KEY` diisi |
 | GET | `/api/smartplug/current` | Status lengkap smartplug + metrik listrik | Header `x-api-key` |
 | GET | `/api/smartplug/status` | Status smartplug (boolean) | Header `x-api-key` |
 | GET | `/api/smartplug/on` | Nyalakan smartplug | Header `x-api-key` |
@@ -87,6 +89,16 @@ Jika API key salah / tidak dikirim:
 
 ```bash
 curl -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/status
+```
+
+```bash
+# buka dashboard (jika API key diaktifkan)
+curl "http://localhost:8000/smartplug?key=change_this_key"
+
+```bash
+# buka dashboard dengan refresh 10 detik
+curl "http://localhost:8000/smartplug?key=change_this_key&refresh=10"
+```
 ```
 
 ```bash

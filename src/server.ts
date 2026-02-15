@@ -374,6 +374,8 @@ export function buildApp() {
     const urlParams = new URL(c.req.url).searchParams;
     const refreshParam = urlParams.get("refresh");
     const pointsParam = urlParams.get("points");
+    const wattMaxParam = urlParams.get("watt_max");
+    const ampereMaxParam = urlParams.get("ampere_max");
     const refreshMs = Math.max(
       1000,
       Number.isFinite(Number(refreshParam))
@@ -384,9 +386,19 @@ export function buildApp() {
       20,
       Number.isFinite(Number(pointsParam)) ? Number(pointsParam) : 120,
     );
+    const maxWatt = Math.max(
+      50,
+      Number.isFinite(Number(wattMaxParam)) ? Number(wattMaxParam) : 2000,
+    );
+    const maxAmpere = Math.max(
+      1,
+      Number.isFinite(Number(ampereMaxParam)) ? Number(ampereMaxParam) : 10,
+    );
     const safeKey = escapeHtml(apiKey);
     const safeRefresh = Number.isFinite(refreshMs) ? String(refreshMs) : "2000";
     const safePoints = Number.isFinite(maxPoints) ? String(maxPoints) : "120";
+    const safeWattMax = Number.isFinite(maxWatt) ? String(maxWatt) : "2000";
+    const safeAmpereMax = Number.isFinite(maxAmpere) ? String(maxAmpere) : "10";
     const html = `<!doctype html>
 <html lang="id">
   <head>
@@ -474,48 +486,152 @@ export function buildApp() {
         font-size: 20px;
         font-weight: 600;
       }
+      .stat.gauge {
+        grid-column: span 2;
+        align-items: center;
+        justify-items: center;
+      }
+      .gauge-wrap {
+        position: relative;
+        width: 220px;
+        height: 220px;
+      }
+      .gauge-wrap svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+      .gauge-track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.08);
+        stroke-width: 14;
+      }
+      .gauge-arc {
+        fill: none;
+        stroke: url(#gaugeGradient);
+        stroke-width: 14;
+        stroke-linecap: round;
+        stroke-dasharray: 0 999;
+        stroke-dashoffset: 0;
+      }
+      .gauge-arc.ampere {
+        stroke: url(#ampereGradient);
+      }
+      .gauge-center {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        gap: 2px;
+        transform: translateY(55px);
+      }
+      .gauge-value {
+        font-size: 32px;
+        font-weight: 600;
+        line-height: 1;
+      }
+      .gauge-meta {
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.06em;
+        line-height: 1;
+        margin-top: -6px;
+      }
       .status-pill {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 6px 14px;
+        padding: 10px 18px;
         border-radius: 999px;
-        background: rgba(52, 211, 153, 0.15);
+        background: rgba(52, 211, 153, 0.18);
         color: var(--ok);
         font-weight: 600;
-        font-size: 13px;
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
       }
       .status-pill.off {
         background: rgba(248, 113, 113, 0.15);
         color: var(--danger);
       }
-      .controls {
+      .status-wrap {
         display: flex;
-        flex-wrap: wrap;
+        align-items: center;
         gap: 12px;
+        flex-wrap: wrap;
       }
-      button {
-        border: none;
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 12px currentColor;
+      }
+      .icon-actions {
+        display: inline-flex;
+        gap: 8px;
+      }
+      .icon-btn {
+        width: 44px;
+        height: 44px;
         border-radius: 12px;
-        padding: 10px 16px;
-        font-weight: 600;
-        cursor: pointer;
-        background: var(--accent);
-        color: #0c1322;
-        transition: transform 0.15s ease, box-shadow 0.2s ease;
-        box-shadow: 0 10px 24px rgba(56, 189, 248, 0.35);
-      }
-      button.secondary {
+        border: 1px solid rgba(255,255,255,0.12);
         background: var(--panel-strong);
         color: var(--text);
-        box-shadow: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.2s ease, border 0.2s ease;
       }
-      button:disabled {
+      .icon-btn svg {
+        width: 20px;
+        height: 20px;
+      }
+      .icon-btn[data-tip] {
+        position: relative;
+      }
+      .icon-btn[data-tip]::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translate(-50%, 120%) scale(0.98);
+        background: rgba(15, 23, 42, 0.95);
+        color: #e2e8f0;
+        padding: 6px 8px;
+        border-radius: 8px;
+        font-size: 11px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        opacity: 0;
+        pointer-events: none;
+        white-space: nowrap;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        box-shadow: 0 12px 24px rgba(8, 15, 28, 0.35);
+      }
+      .icon-btn[data-tip]:hover::after {
+        opacity: 1;
+        transform: translate(-50%, 140%) scale(1);
+      }
+      .icon-btn.primary {
+        background: rgba(52, 211, 153, 0.18);
+        color: #34d399;
+        border-color: rgba(52, 211, 153, 0.4);
+        box-shadow: 0 10px 24px rgba(52, 211, 153, 0.2);
+      }
+      .icon-btn.danger {
+        background: rgba(248, 113, 113, 0.18);
+        color: #f87171;
+        border-color: rgba(248, 113, 113, 0.4);
+        box-shadow: 0 10px 24px rgba(248, 113, 113, 0.2);
+      }
+      .icon-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+      .icon-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-      }
-      button:hover:not(:disabled) {
-        transform: translateY(-1px);
       }
       .footer {
         display: flex;
@@ -558,28 +674,83 @@ export function buildApp() {
     </style>
   </head>
   <body>
-    <div class="shell" data-api-key="${safeKey}" data-refresh="${safeRefresh}" data-points="${safePoints}">
+    <div class="shell" data-api-key="${safeKey}" data-refresh="${safeRefresh}" data-points="${safePoints}" data-watt-max="${safeWattMax}" data-ampere-max="${safeAmpereMax}">
       <header>
         <div class="title">
           <h1>Smartplug Dashboard</h1>
           <div class="subtitle">Monitoring real-time smartplug Tuya</div>
         </div>
-        <div id="status-pill" class="status-pill">Muat data...</div>
+        <div class="status-wrap">
+          <div id="status-pill" class="status-pill">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="status-text">Muat data...</span>
+          </div>
+          <div class="icon-actions">
+            <button id="btn-on" class="icon-btn primary" aria-label="Nyalakan" data-tip="Nyalakan">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v6m4.24-3.76a8 8 0 1 1-8.48 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button id="btn-off" class="icon-btn danger" aria-label="Matikan" data-tip="Matikan">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v6m4.24-3.76a8 8 0 1 1-8.48 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M5 19l14-14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button id="btn-refresh" class="icon-btn" aria-label="Refresh" data-tip="Refresh">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
       </header>
 
       <section class="card">
         <div class="grid">
-          <div class="stat">
+          <div class="stat gauge">
             <span>Daya</span>
-            <strong id="watt">-</strong>
+            <div class="gauge-wrap">
+              <svg id="watt-gauge" viewBox="0 0 220 220" aria-label="Watt gauge" role="img">
+                <defs>
+                  <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#22d3ee"></stop>
+                    <stop offset="50%" stop-color="#38bdf8"></stop>
+                    <stop offset="100%" stop-color="#f87171"></stop>
+                  </linearGradient>
+                </defs>
+                <circle class="gauge-track" cx="110" cy="110" r="90"></circle>
+                <circle class="gauge-arc" id="gauge-arc" cx="110" cy="110" r="90"></circle>
+              </svg>
+              <div class="gauge-center">
+                <div class="gauge-value" id="watt">-</div>
+                <div class="gauge-meta" id="watt-meta">Max - W</div>
+              </div>
+            </div>
+          </div>
+          <div class="stat gauge">
+            <span>Arus</span>
+            <div class="gauge-wrap">
+              <svg id="ampere-gauge" viewBox="0 0 220 220" aria-label="Ampere gauge" role="img">
+                <defs>
+                  <linearGradient id="ampereGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#34d399"></stop>
+                    <stop offset="50%" stop-color="#a3e635"></stop>
+                    <stop offset="100%" stop-color="#facc15"></stop>
+                  </linearGradient>
+                </defs>
+                <circle class="gauge-track" cx="110" cy="110" r="90"></circle>
+                <circle class="gauge-arc ampere" id="gauge-ampere" cx="110" cy="110" r="90"></circle>
+              </svg>
+              <div class="gauge-center">
+                <div class="gauge-value" id="ampere">-</div>
+                <div class="gauge-meta" id="ampere-meta">Max - A</div>
+              </div>
+            </div>
           </div>
           <div class="stat">
             <span>Tegangan</span>
             <strong id="volt">-</strong>
-          </div>
-          <div class="stat">
-            <span>Arus</span>
-            <strong id="ampere">-</strong>
           </div>
           <div class="stat">
             <span>Total kWh</span>
@@ -595,14 +766,6 @@ export function buildApp() {
         </div>
       </section>
 
-      <section class="card">
-        <div class="controls">
-          <button id="btn-on">Nyalakan</button>
-          <button id="btn-off" class="secondary">Matikan</button>
-          <button id="btn-refresh" class="secondary">Refresh</button>
-        </div>
-      </section>
-
       <section class="footer card">
         <div>Last update: <span id="last-update">-</span></div>
         <div>Next refresh: <span id="next-refresh">-</span> <span id="next-refresh-at"></span></div>
@@ -615,9 +778,12 @@ export function buildApp() {
       const apiKey = dataset.apiKey ? dataset.apiKey : "";
       const refreshMs = Number(dataset.refresh || "2000") || 2000;
       const maxPoints = Number(dataset.points || "120") || 120;
+      const maxWatt = Number(dataset.wattMax || "2000") || 2000;
+      const maxAmpere = Number(dataset.ampereMax || "10") || 10;
       const headers = apiKey ? { "x-api-key": apiKey } : {};
 
       const statusPill = document.getElementById("status-pill");
+      const statusText = document.getElementById("status-text");
       const elWatt = document.getElementById("watt");
       const elVolt = document.getElementById("volt");
       const elAmpere = document.getElementById("ampere");
@@ -632,11 +798,35 @@ export function buildApp() {
       const chart = document.getElementById("chart");
       const ctx = chart && chart.getContext ? chart.getContext("2d") : null;
       const tooltip = document.getElementById("chart-tooltip");
+      const gaugeArc = document.getElementById("gauge-arc");
+      const gaugeAmpere = document.getElementById("gauge-ampere");
+      const wattMeta = document.getElementById("watt-meta");
+      const ampereMeta = document.getElementById("ampere-meta");
+
+      if (gaugeArc || gaugeAmpere) {
+        const r = 90;
+        const circumference = 2 * Math.PI * r;
+        if (gaugeArc) {
+          gaugeArc.style.strokeDasharray = circumference + " " + circumference;
+          gaugeArc.style.strokeDashoffset = String(circumference);
+        }
+        if (gaugeAmpere) {
+          gaugeAmpere.style.strokeDasharray = circumference + " " + circumference;
+          gaugeAmpere.style.strokeDashoffset = String(circumference);
+        }
+      }
+      if (wattMeta) wattMeta.textContent = "Max " + maxWatt + " W";
+      if (ampereMeta) ampereMeta.textContent = "Max " + maxAmpere + " A";
 
       const formatNumber = (value, unit, digits = 2) => {
         if (value === null || value === undefined) return "-";
         if (typeof value !== "number") return "-";
         return value.toFixed(digits) + " " + unit;
+      };
+      const formatGauge = (value, unit, digits = 2) => {
+        if (value === null || value === undefined) return "-";
+        if (typeof value !== "number") return "-";
+        return value.toFixed(digits) + unit;
       };
 
       const history = {
@@ -732,13 +922,13 @@ export function buildApp() {
 
         ctx.fillStyle = "#e2e8f0";
         ctx.font = '12px "Space Grotesk", sans-serif';
-        ctx.fillText("Watt", 12, 18);
+        ctx.fillText("Watt", 12, 14);
         ctx.fillStyle = "#38bdf8";
-        ctx.fillRect(50, 10, 12, 12);
+        ctx.fillRect(50, 6, 12, 12);
         ctx.fillStyle = "#e2e8f0";
-        ctx.fillText("Ampere", 80, 18);
+        ctx.fillText("Ampere", 80, 14);
         ctx.fillStyle = "#34d399";
-        ctx.fillRect(138, 10, 12, 12);
+        ctx.fillRect(138, 6, 12, 12);
       };
 
       const showTooltip = (evt) => {
@@ -785,19 +975,33 @@ export function buildApp() {
       };
 
       const setStatus = (status) => {
-        statusPill.textContent = status;
-        statusPill.classList.toggle("off", status !== "ON");
+        if (statusText) statusText.textContent = status;
+        if (statusPill) statusPill.classList.toggle("off", status !== "ON");
       };
 
       const updateUI = (payload) => {
         setStatus(payload && payload.status ? payload.status : "UNKNOWN");
-        elWatt.textContent = formatNumber(payload.watt, "W", 1);
+        elWatt.textContent = formatGauge(payload.watt, "W", 1);
         elVolt.textContent = formatNumber(payload.volt, "V", 1);
-        elAmpere.textContent = formatNumber(payload.ampere, "A", 3);
+        elAmpere.textContent = formatGauge(payload.ampere, "A", 3);
         elTotal.textContent = formatNumber(payload.total_kwh, "kWh", 2);
         elLast.textContent =
           payload && payload.datetime ? payload.datetime : new Date().toISOString();
         elError.textContent = payload && payload.error ? payload.error : "";
+        if (payload) {
+          const r = 90;
+          const circumference = 2 * Math.PI * r;
+          if (gaugeArc && typeof payload.watt === "number") {
+            const ratio = Math.max(0, Math.min(payload.watt / maxWatt, 1));
+            gaugeArc.style.strokeDasharray = circumference + " " + circumference;
+            gaugeArc.style.strokeDashoffset = String(circumference * (1 - ratio));
+          }
+          if (gaugeAmpere && typeof payload.ampere === "number") {
+            const ratio = Math.max(0, Math.min(payload.ampere / maxAmpere, 1));
+            gaugeAmpere.style.strokeDasharray = circumference + " " + circumference;
+            gaugeAmpere.style.strokeDashoffset = String(circumference * (1 - ratio));
+          }
+        }
         pushHistory(payload);
         drawChart();
       };

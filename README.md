@@ -24,7 +24,7 @@ cp .env.example .env
 
 Catatan: Jika value `KEY` mengandung karakter khusus (mis. `$` atau `'`), gunakan tanda kutip ganda agar tidak salah dibaca.
 Catatan keamanan: jika `TUYA_API_KEY` diisi, semua endpoint `/api/*` wajib mengirim header `x-api-key`. Jika kosong, endpoint tetap terbuka.
-Dashboard `/smartplug` bisa diakses dengan `?key=YOUR_KEY` jika `TUYA_API_KEY` diisi. Interval auto refresh default 2 detik, bisa diubah dengan `?refresh=10` (detik). Jumlah titik grafik default 120, bisa diubah dengan `?points=200`. Dashboard menampilkan countdown, jam refresh berikutnya, dan grafik watt/ampere (hover untuk detail).
+Dashboard `/smartplug` bisa diakses dengan `?key=YOUR_KEY` jika `TUYA_API_KEY` diisi. Interval auto refresh default 2 detik, bisa diubah dengan `?refresh=10` (detik). Jumlah titik grafik default 120, bisa diubah dengan `?points=200`. Skala maksimum gauge watt default 2000, bisa diubah dengan `?watt_max=3000`. Skala maksimum gauge ampere default 10, bisa diubah dengan `?ampere_max=15`. Dashboard menampilkan countdown, jam refresh berikutnya, label max di gauge, dan grafik watt/ampere (hover untuk detail).
 
 Contoh isi `.env` (tanpa kredensial asli):
 
@@ -103,6 +103,16 @@ curl "http://localhost:8000/smartplug?key=change_this_key&refresh=10"
 ```bash
 # buka dashboard dengan 200 titik history grafik
 curl "http://localhost:8000/smartplug?key=change_this_key&points=200"
+```
+
+```bash
+# buka dashboard dengan skala maksimum 3000W
+curl "http://localhost:8000/smartplug?key=change_this_key&watt_max=3000"
+```
+
+```bash
+# buka dashboard dengan skala maksimum 15A
+curl "http://localhost:8000/smartplug?key=change_this_key&ampere_max=15"
 ```
 ```
 

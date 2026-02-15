@@ -23,6 +23,7 @@ deno task dev
 
 ## Dokumentasi
 
+- Indeks dokumentasi: `docs/README.md`
 - Konfigurasi env: `docs/CONFIG.md`
 - API & contoh request: `docs/API.md`
 - Dashboard & query params: `docs/DASHBOARD.md`

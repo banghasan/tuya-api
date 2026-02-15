@@ -1,5 +1,7 @@
 # Dashboard
 
+Kembali ke [README utama](../README.md) · [Dokumentasi](README.md).
+
 ## Akses
 
 - URL: `http://localhost:8000/smartplug`

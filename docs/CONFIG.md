@@ -1,5 +1,7 @@
 # Konfigurasi
 
+Kembali ke [README utama](../README.md) · [Dokumentasi](README.md).
+
 ## File .env
 
 Salin contoh dan isi kredensial perangkat:

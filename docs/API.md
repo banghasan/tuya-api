@@ -1,5 +1,7 @@
 # API
 
+Kembali ke [README utama](../README.md) · [Dokumentasi](README.md).
+
 ## Endpoint
 
 | Method   | URL                      | Deskripsi                                 | Auth                                    |

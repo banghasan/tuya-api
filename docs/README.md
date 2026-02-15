@@ -1,10 +1,12 @@
 # Dokumentasi
 
+Kembali ke [README utama](../README.md).
+
 Ringkasan dokumen penting untuk project ini:
 
-- `docs/CONFIG.md`: konfigurasi `.env` dan variabel lingkungan.
-- `docs/API.md`: daftar endpoint dan contoh request.
-- `docs/DASHBOARD.md`: cara akses dashboard dan query params.
+- [docs/CONFIG.md](CONFIG.md): konfigurasi `.env` dan variabel lingkungan.
+- [docs/API.md](API.md): daftar endpoint dan contoh request.
+- [docs/DASHBOARD.md](DASHBOARD.md): cara akses dashboard dan query params.
 
 ## Mulai Cepat
 

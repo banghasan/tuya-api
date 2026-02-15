@@ -23,3 +23,10 @@ deno task format
 
 deno task test
 ```
+
+## Security & Hardening
+
+- Dashboard `/smartplug` sudah mengirim CSP, `X-Content-Type-Options`, dan
+  `Referrer-Policy`.
+- Gunakan `TUYA_API_KEY` agar endpoint `/api/*` tidak terbuka.
+- Jalankan service di jaringan lokal jika tidak butuh akses publik.

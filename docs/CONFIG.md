@@ -25,3 +25,12 @@ cp .env.example .env
   kutip ganda.
 - Jika `TUYA_API_KEY` diisi, semua endpoint `/api/*` membutuhkan header
   `x-api-key`.
+
+## Security Headers (Dashboard)
+
+Dashboard `/smartplug` mengirim header keamanan berikut:
+
+- `Content-Security-Policy`: batasi sumber resource ke `self` (dengan inline
+  CSS/JS untuk template).
+- `X-Content-Type-Options: nosniff`.
+- `Referrer-Policy: no-referrer`.

@@ -24,9 +24,19 @@ Salin `.env.example` menjadi `.env` lalu isi kredensial sesuai device milikmu:
 cp .env.example .env
 ```
 
-Catatan: Jika value `KEY` mengandung karakter khusus (mis. `$` atau `'`), gunakan tanda kutip ganda agar tidak salah dibaca.
-Catatan keamanan: jika `TUYA_API_KEY` diisi, semua endpoint `/api/*` wajib mengirim header `x-api-key`. Jika kosong, endpoint tetap terbuka.
-Dashboard `/smartplug` bisa diakses tanpa key di URL. Jika `TUYA_API_KEY` diisi, dashboard akan meminta key dan menyimpannya di sessionStorage (tidak tampil di URL). Optional: `?key=YOUR_KEY` untuk sekali isi otomatis (akan dihapus dari URL setelah load). Interval auto refresh default 2 detik, bisa diubah dengan `?refresh=10` (detik). Jumlah titik grafik default 120, bisa diubah dengan `?points=200`. Skala maksimum gauge watt default 2000, bisa diubah dengan `?watt_max=3000`. Skala maksimum gauge ampere default 10, bisa diubah dengan `?ampere_max=15`. Dashboard menampilkan countdown, jam refresh berikutnya, label max di gauge, dan grafik watt/ampere (hover untuk detail).
+Catatan: Jika value `KEY` mengandung karakter khusus (mis. `$` atau `'`),
+gunakan tanda kutip ganda agar tidak salah dibaca. Catatan keamanan: jika
+`TUYA_API_KEY` diisi, semua endpoint `/api/*` wajib mengirim header `x-api-key`.
+Jika kosong, endpoint tetap terbuka. Dashboard `/smartplug` bisa diakses tanpa
+key di URL. Jika `TUYA_API_KEY` diisi, dashboard akan meminta key dan
+menyimpannya di sessionStorage (tidak tampil di URL). Optional: `?key=YOUR_KEY`
+untuk sekali isi otomatis (akan dihapus dari URL setelah load). Interval auto
+refresh default 2 detik, bisa diubah dengan `?refresh=10` (detik). Jumlah titik
+grafik default 120, bisa diubah dengan `?points=200`. Skala maksimum gauge watt
+default 2000, bisa diubah dengan `?watt_max=3000`. Skala maksimum gauge ampere
+default 10, bisa diubah dengan `?ampere_max=15`. Dashboard menampilkan
+countdown, jam refresh berikutnya, label max di gauge, dan grafik watt/ampere
+(hover untuk detail).
 
 Contoh isi `.env` (tanpa kredensial asli):
 
@@ -63,27 +73,28 @@ TUYA_SCAN_VERSIONS=3.3,3.1
 
 ## Daftar API
 
-| Method | URL | Deskripsi | Auth |
-| --- | --- | --- | --- |
-| GET | `/` | Health check | Tidak |
-| GET | `/health` | Health check (JSON) | Tidak |
-| GET | `/smartplug` | Dashboard monitoring smartplug | Query `?key=` jika `TUYA_API_KEY` diisi |
-| GET | `/api/smartplug/current` | Status lengkap smartplug + metrik listrik | Header `x-api-key` |
-| GET | `/api/smartplug/status` | Status smartplug (boolean) | Header `x-api-key` |
-| GET | `/api/smartplug/on` | Nyalakan smartplug | Header `x-api-key` |
-| POST | `/api/smartplug/on` | Nyalakan smartplug | Header `x-api-key` |
-| GET | `/api/smartplug/off` | Matikan smartplug | Header `x-api-key` |
-| POST | `/api/smartplug/off` | Matikan smartplug | Header `x-api-key` |
-| GET | `/api/irblaster/current` | Status lengkap IR blaster | Header `x-api-key` |
-| GET | `/api/irblaster/status` | Status IR blaster | Header `x-api-key` |
-| GET | `/api/devices/list` | Daftar device terkonfigurasi | Header `x-api-key` |
-| GET | `/api/devices/scan` | Scan device Tuya di jaringan | Header `x-api-key` |
+| Method | URL                      | Deskripsi                                 | Auth                                    |
+| ------ | ------------------------ | ----------------------------------------- | --------------------------------------- |
+| GET    | `/`                      | Health check                              | Tidak                                   |
+| GET    | `/health`                | Health check (JSON)                       | Tidak                                   |
+| GET    | `/smartplug`             | Dashboard monitoring smartplug            | Query `?key=` jika `TUYA_API_KEY` diisi |
+| GET    | `/api/smartplug/current` | Status lengkap smartplug + metrik listrik | Header `x-api-key`                      |
+| GET    | `/api/smartplug/status`  | Status smartplug (boolean)                | Header `x-api-key`                      |
+| GET    | `/api/smartplug/on`      | Nyalakan smartplug                        | Header `x-api-key`                      |
+| POST   | `/api/smartplug/on`      | Nyalakan smartplug                        | Header `x-api-key`                      |
+| GET    | `/api/smartplug/off`     | Matikan smartplug                         | Header `x-api-key`                      |
+| POST   | `/api/smartplug/off`     | Matikan smartplug                         | Header `x-api-key`                      |
+| GET    | `/api/irblaster/current` | Status lengkap IR blaster                 | Header `x-api-key`                      |
+| GET    | `/api/irblaster/status`  | Status IR blaster                         | Header `x-api-key`                      |
+| GET    | `/api/devices/list`      | Daftar device terkonfigurasi              | Header `x-api-key`                      |
+| GET    | `/api/devices/scan`      | Scan device Tuya di jaringan              | Header `x-api-key`                      |
 
 ```bash
 curl -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/current
 ```
 
 Jika API key salah / tidak dikirim:
+
 ```json
 {
   "error": "Unauthorized"
@@ -94,14 +105,14 @@ Jika API key salah / tidak dikirim:
 curl -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/status
 ```
 
-```bash
+````bash
 # buka dashboard (akan meminta API key jika diaktifkan)
 curl "http://localhost:8000/smartplug"
 
 ```bash
 # buka dashboard dengan refresh 10 detik
 curl "http://localhost:8000/smartplug?refresh=10"
-```
+````
 
 ```bash
 # buka dashboard dengan 200 titik history grafik
@@ -117,14 +128,15 @@ curl "http://localhost:8000/smartplug?watt_max=3000"
 # buka dashboard dengan skala maksimum 15A
 curl "http://localhost:8000/smartplug?ampere_max=15"
 ```
-```
 
+````
 ```bash
 # nyalakan smartplug (GET)
 curl -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/on
-```
+````
 
 Contoh response:
+
 ```json
 {
   "datetime": "2026-02-15T10:12:30+07:00",
@@ -134,6 +146,7 @@ Contoh response:
 ```
 
 Jika device offline / IP tidak aktif:
+
 ```json
 {
   "datetime": "2026-02-15T10:12:30+07:00",
@@ -154,6 +167,7 @@ curl -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug/off
 ```
 
 Contoh response:
+
 ```json
 {
   "datetime": "2026-02-15T10:12:35+07:00",
@@ -168,6 +182,7 @@ curl -X POST -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug
 ```
 
 Contoh response:
+
 ```json
 {
   "datetime": "2026-02-15T10:12:40+07:00",
@@ -182,6 +197,7 @@ curl -X POST -H "x-api-key: change_this_key" http://localhost:8000/api/smartplug
 ```
 
 Contoh response:
+
 ```json
 {
   "datetime": "2026-02-15T10:12:45+07:00",

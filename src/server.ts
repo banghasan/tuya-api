@@ -17,7 +17,7 @@ export function buildApp() {
   return app;
 }
 
-export { setTuyaFactoryForTest, resetTuyaFactoryForTest };
+export { resetTuyaFactoryForTest, setTuyaFactoryForTest };
 
 export const api = buildApp();
 

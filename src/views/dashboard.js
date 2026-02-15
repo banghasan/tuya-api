@@ -66,10 +66,10 @@ const hideKeyModal = () => {
   keyModal.classList.add("hidden");
 };
 
-const urlKey = new URL(window.location.href).searchParams.get("key");
+const urlKey = new URL(globalThis.location.href).searchParams.get("key");
 if (urlKey) {
   setStoredKey(urlKey);
-  const cleanUrl = new URL(window.location.href);
+  const cleanUrl = new URL(globalThis.location.href);
   cleanUrl.searchParams.delete("key");
   history.replaceState({}, "", cleanUrl.toString());
 }
@@ -135,7 +135,7 @@ const history = {
 const resizeChart = () => {
   if (!chart) return;
   const rect = chart.getBoundingClientRect();
-  const scale = window.devicePixelRatio || 1;
+  const scale = globalThis.devicePixelRatio || 1;
   chart.width = Math.max(300, Math.floor(rect.width * scale));
   chart.height = Math.floor(240 * scale);
 };
@@ -145,8 +145,9 @@ const pushHistory = (payload) => {
     !payload ||
     typeof payload.watt !== "number" ||
     typeof payload.ampere !== "number"
-  )
+  ) {
     return;
+  }
   const wattVal = payload.watt === 0 ? 0.001 : payload.watt;
   const ampVal = payload.ampere === 0 ? 0.001 : payload.ampere;
   history.watt.push(wattVal);
@@ -253,13 +254,12 @@ const showTooltip = (evt) => {
   const aVal = history.ampere[idx];
   const ts = history.ts[idx];
   if (typeof wVal !== "number" || typeof aVal !== "number") return;
-  tooltip.textContent =
-    new Date(ts).toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }) +
+  tooltip.textContent = new Date(ts).toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }) +
     " • " +
     wVal.toFixed(1) +
     " W • " +
@@ -289,8 +289,9 @@ const updateUI = (payload) => {
   elVolt.textContent = formatNumber(payload.volt, "V", 1);
   elAmpere.textContent = formatGauge(payload.ampere, "A", 3);
   elTotal.textContent = formatNumber(payload.total_kwh, "kWh", 2);
-  elLast.textContent =
-    payload && payload.datetime ? payload.datetime : new Date().toISOString();
+  elLast.textContent = payload && payload.datetime
+    ? payload.datetime
+    : new Date().toISOString();
   elError.textContent = payload && payload.error ? payload.error : "";
   if (payload) {
     const r = 90;
@@ -320,8 +321,7 @@ const startCountdown = () => {
   const nextAt = new Date(Date.now() + refreshMs);
   elNext.textContent = remaining + "s";
   if (elNextAt) {
-    elNextAt.textContent =
-      "(" +
+    elNextAt.textContent = "(" +
       nextAt.toLocaleTimeString("id-ID", {
         hour: "2-digit",
         minute: "2-digit",
@@ -352,8 +352,9 @@ const fetchData = async () => {
     startCountdown();
   } catch (err) {
     setStatus("OFFLINE");
-    elError.textContent =
-      err && err.message ? err.message : "Gagal memuat data";
+    elError.textContent = err && err.message
+      ? err.message
+      : "Gagal memuat data";
   }
 };
 
@@ -372,8 +373,9 @@ const sendPower = async (on) => {
     const data = await res.json();
     updateUI(data);
   } catch (err) {
-    elError.textContent =
-      err && err.message ? err.message : "Gagal mengubah status";
+    elError.textContent = err && err.message
+      ? err.message
+      : "Gagal mengubah status";
   } finally {
     btnOn.disabled = false;
     btnOff.disabled = false;
@@ -402,7 +404,7 @@ if (refreshSave && refreshInput) {
 }
 
 resizeChart();
-window.addEventListener("resize", () => {
+globalThis.addEventListener("resize", () => {
   resizeChart();
   drawChart();
 });

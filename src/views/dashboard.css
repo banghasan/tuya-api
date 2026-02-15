@@ -11,13 +11,16 @@
   --ok: #34d399;
   --shadow: 0 20px 60px rgba(6, 12, 24, 0.45);
 }
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 body {
   margin: 0;
   min-height: 100vh;
   font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
   color: var(--text);
-  background: radial-gradient(1200px 800px at 10% -10%, #25314b, transparent),
+  background:
+    radial-gradient(1200px 800px at 10% -10%, #25314b, transparent),
     radial-gradient(900px 600px at 90% 10%, #1c2c4c, transparent),
     var(--bg);
   display: flex;
@@ -50,8 +53,12 @@ h1 {
   font-size: 14px;
 }
 .card {
-  background: linear-gradient(140deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.01)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: 22px;
   box-shadow: var(--shadow);
@@ -168,7 +175,7 @@ h1 {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: var(--panel-strong);
   color: var(--text);
   display: inline-flex;
@@ -253,7 +260,7 @@ h1 {
   width: 72px;
   padding: 6px 8px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0f172a;
   color: var(--text);
   font-size: 12px;
@@ -337,7 +344,7 @@ canvas {
   background: var(--panel);
   border-radius: 16px;
   padding: 22px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: var(--shadow);
   display: grid;
   gap: 12px;
@@ -354,7 +361,7 @@ canvas {
   width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0f172a;
   color: var(--text);
   font-size: 14px;

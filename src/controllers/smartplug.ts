@@ -16,7 +16,9 @@ function buildSmartplugOffline(errorMessage: string) {
   };
 }
 
-export async function smartplugCurrent(c: { json: (body: unknown, status?: number) => Response }) {
+export async function smartplugCurrent(
+  c: { json: (body: unknown, status?: number) => Response },
+) {
   try {
     const result = await getSmartplugData();
     return c.json(result);
@@ -26,7 +28,9 @@ export async function smartplugCurrent(c: { json: (body: unknown, status?: numbe
   }
 }
 
-export async function smartplugStatus(c: { json: (body: unknown, status?: number) => Response }) {
+export async function smartplugStatus(
+  c: { json: (body: unknown, status?: number) => Response },
+) {
   try {
     const result = await getSmartplugData();
     return c.json({
@@ -41,7 +45,9 @@ export async function smartplugStatus(c: { json: (body: unknown, status?: number
   }
 }
 
-export async function smartplugOn(c: { json: (body: unknown, status?: number) => Response }) {
+export async function smartplugOn(
+  c: { json: (body: unknown, status?: number) => Response },
+) {
   try {
     const result = await setSmartplugPower(true);
     return c.json(result);
@@ -51,7 +57,9 @@ export async function smartplugOn(c: { json: (body: unknown, status?: number) =>
   }
 }
 
-export async function smartplugOff(c: { json: (body: unknown, status?: number) => Response }) {
+export async function smartplugOff(
+  c: { json: (body: unknown, status?: number) => Response },
+) {
   try {
     const result = await setSmartplugPower(false);
     return c.json(result);

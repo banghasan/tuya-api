@@ -19,7 +19,9 @@ export type TuyaDevice = {
 type TuyaFactory = (options: Record<string, unknown>) => TuyaDevice;
 
 const defaultTuyaFactory: TuyaFactory = (options) =>
-  new TuyAPI(options as unknown as { id: string; key: string }) as unknown as TuyaDevice;
+  new TuyAPI(
+    options as unknown as { id: string; key: string },
+  ) as unknown as TuyaDevice;
 
 let tuyaFactory: TuyaFactory = defaultTuyaFactory;
 
@@ -46,7 +48,10 @@ function attachTuyaErrorHandler(device: TuyaDevice, label: string) {
 function withTimeout<T>(label: string, promise: Promise<T>): Promise<T> {
   const timeoutMs = getTimeoutMs();
   const timeout = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error(`${label} timeout ${timeoutMs}ms`)), timeoutMs);
+    setTimeout(
+      () => reject(new Error(`${label} timeout ${timeoutMs}ms`)),
+      timeoutMs,
+    );
   });
   return Promise.race([promise, timeout]);
 }
@@ -139,8 +144,8 @@ export async function getIrblasterData() {
     await withTimeout("connect", device.connect());
 
     const data = await withTimeout("get", device.get({ schema: true }));
-    const dps =
-      (data as { dps?: Record<string, unknown> } | undefined)?.dps ?? {};
+    const dps = (data as { dps?: Record<string, unknown> } | undefined)?.dps ??
+      {};
 
     const { datetime, timezone } = formatDateTimeTZ(new Date());
     return {

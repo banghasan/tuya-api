@@ -1,7 +1,12 @@
 import { requireEnv } from "../services/config.ts";
 import { scanTuyaDevices } from "../services/tuya.ts";
 
-export async function devicesScan(c: { req: { url: string }; json: (body: unknown, status?: number) => Response }) {
+export async function devicesScan(
+  c: {
+    req: { url: string };
+    json: (body: unknown, status?: number) => Response;
+  },
+) {
   try {
     const query = new URL(c.req.url).searchParams;
     const result = await scanTuyaDevices(query);
@@ -12,7 +17,9 @@ export async function devicesScan(c: { req: { url: string }; json: (body: unknow
   }
 }
 
-export function devicesList(c: { json: (body: unknown, status?: number) => Response }) {
+export function devicesList(
+  c: { json: (body: unknown, status?: number) => Response },
+) {
   try {
     const devices = [
       {

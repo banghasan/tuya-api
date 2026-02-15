@@ -10,14 +10,18 @@ export function getApiKey(): string | null {
   return Deno.env.get("TUYA_API_KEY") ?? null;
 }
 
-export function verifyApiKey(c: { req: { header: (name: string) => string | undefined } }): boolean {
+export function verifyApiKey(
+  c: { req: { header: (name: string) => string | undefined } },
+): boolean {
   const expected = getApiKey();
   if (!expected) return true;
   const headerKey = c.req.header("x-api-key");
   return headerKey === expected;
 }
 
-export function verifyApiKeyForDashboard(c: { req: { header: (name: string) => string | undefined; url: string } }): boolean {
+export function verifyApiKeyForDashboard(
+  c: { req: { header: (name: string) => string | undefined; url: string } },
+): boolean {
   const expected = getApiKey();
   if (!expected) return true;
   const headerKey = c.req.header("x-api-key");

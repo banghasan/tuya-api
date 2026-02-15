@@ -1,6 +1,8 @@
 import { getIrblasterData } from "../services/tuya.ts";
 
-export async function irblasterCurrent(c: { json: (body: unknown, status?: number) => Response }) {
+export async function irblasterCurrent(
+  c: { json: (body: unknown, status?: number) => Response },
+) {
   try {
     const result = await getIrblasterData();
     return c.json(result);
@@ -10,7 +12,9 @@ export async function irblasterCurrent(c: { json: (body: unknown, status?: numbe
   }
 }
 
-export async function irblasterStatus(c: { json: (body: unknown, status?: number) => Response }) {
+export async function irblasterStatus(
+  c: { json: (body: unknown, status?: number) => Response },
+) {
   try {
     const result = await getIrblasterData();
     return c.json({

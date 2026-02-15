@@ -23,7 +23,9 @@ function normalizeOffset(offset: string): string | null {
   return `${sign}${hours}:${minutes}`;
 }
 
-export function formatDateTimeTZ(date: Date): { datetime: string; timezone: string } {
+export function formatDateTimeTZ(
+  date: Date,
+): { datetime: string; timezone: string } {
   const preferred = getTimezone();
   const fallback = "Asia/Jakarta";
   let timeZone = preferred;

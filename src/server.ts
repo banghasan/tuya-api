@@ -371,15 +371,22 @@ export function buildApp() {
       return c.text("Unauthorized", 401);
     }
     const apiKey = getApiKey() ?? "";
-    const refreshParam = new URL(c.req.url).searchParams.get("refresh");
+    const urlParams = new URL(c.req.url).searchParams;
+    const refreshParam = urlParams.get("refresh");
+    const pointsParam = urlParams.get("points");
     const refreshMs = Math.max(
       1000,
       Number.isFinite(Number(refreshParam))
         ? Number(refreshParam) * 1000
         : 2000,
     );
+    const maxPoints = Math.max(
+      20,
+      Number.isFinite(Number(pointsParam)) ? Number(pointsParam) : 120,
+    );
     const safeKey = escapeHtml(apiKey);
     const safeRefresh = Number.isFinite(refreshMs) ? String(refreshMs) : "2000";
+    const safePoints = Number.isFinite(maxPoints) ? String(maxPoints) : "120";
     const html = `<!doctype html>
 <html lang="id">
   <head>
@@ -518,6 +525,32 @@ export function buildApp() {
         color: var(--muted);
         font-size: 13px;
       }
+      canvas {
+        width: 100%;
+        height: 240px;
+        display: block;
+        border-radius: 12px;
+        background: #0f172a;
+      }
+      .chart-wrap {
+        position: relative;
+      }
+      .tooltip {
+        position: absolute;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        color: #e2e8f0;
+        font-size: 12px;
+        white-space: nowrap;
+        pointer-events: none;
+        transform: translate(-50%, -110%);
+        box-shadow: 0 12px 24px rgba(8, 15, 28, 0.45);
+      }
+      .tooltip.hidden {
+        display: none;
+      }
       .error {
         color: var(--danger);
         font-weight: 600;
@@ -525,7 +558,7 @@ export function buildApp() {
     </style>
   </head>
   <body>
-    <div class="shell" data-api-key="${safeKey}" data-refresh="${safeRefresh}">
+    <div class="shell" data-api-key="${safeKey}" data-refresh="${safeRefresh}" data-points="${safePoints}">
       <header>
         <div class="title">
           <h1>Smartplug Dashboard</h1>
@@ -555,6 +588,13 @@ export function buildApp() {
         </div>
       </section>
 
+      <section class="card chart-card">
+        <div class="chart-wrap">
+          <canvas id="chart" width="900" height="240" aria-label="Grafik watt dan ampere" role="img"></canvas>
+          <div id="chart-tooltip" class="tooltip hidden"></div>
+        </div>
+      </section>
+
       <section class="card">
         <div class="controls">
           <button id="btn-on">Nyalakan</button>
@@ -573,6 +613,7 @@ export function buildApp() {
       const root = document.querySelector(".shell");
       const apiKey = root?.dataset?.apiKey ?? "";
       const refreshMs = Number(root?.dataset?.refresh ?? "2000") || 2000;
+      const maxPoints = Number(root?.dataset?.points ?? "120") || 120;
       const headers = apiKey ? { "x-api-key": apiKey } : {};
 
       const statusPill = document.getElementById("status-pill");
@@ -587,11 +628,159 @@ export function buildApp() {
       const btnOn = document.getElementById("btn-on");
       const btnOff = document.getElementById("btn-off");
       const btnRefresh = document.getElementById("btn-refresh");
+      const chart = document.getElementById("chart");
+      const ctx = chart?.getContext?.("2d");
+      const tooltip = document.getElementById("chart-tooltip");
 
       const formatNumber = (value, unit, digits = 2) => {
         if (value === null || value === undefined) return "-";
         if (typeof value !== "number") return "-";
         return value.toFixed(digits) + " " + unit;
+      };
+
+      const history = {
+        watt: [],
+        ampere: [],
+        ts: [],
+        maxPoints,
+      };
+
+      const resizeChart = () => {
+        if (!chart) return;
+        const rect = chart.getBoundingClientRect();
+        const scale = window.devicePixelRatio || 1;
+        chart.width = Math.max(300, Math.floor(rect.width * scale));
+        chart.height = Math.floor(240 * scale);
+      };
+
+      const pushHistory = (payload) => {
+        if (typeof payload?.watt !== "number" || typeof payload?.ampere !== "number") return;
+        history.watt.push(payload.watt);
+        history.ampere.push(payload.ampere);
+        history.ts.push(Date.now());
+        if (history.watt.length > history.maxPoints) {
+          history.watt.shift();
+          history.ampere.shift();
+          history.ts.shift();
+        }
+      };
+
+      let hoverIndex = null;
+      const drawChart = () => {
+        if (!ctx || !chart) return;
+        const w = chart.width;
+        const h = chart.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= 4; i++) {
+          const y = (h / 5) * i;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+        const values = history.watt.concat(history.ampere);
+        if (!values.length) return;
+        const maxValue = Math.max(...values, 1);
+        const minValue = 0;
+        const scaleY = (val) => h - ((val - minValue) / (maxValue - minValue)) * (h - 20) - 10;
+        const scaleX = (idx) => (w - 20) * (idx / Math.max(history.watt.length - 1, 1)) + 10;
+
+        const drawLine = (arr, color) => {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          arr.forEach((val, idx) => {
+            const x = scaleX(idx);
+            const y = scaleY(val);
+            if (idx === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        };
+
+        drawLine(history.watt, "#38bdf8");
+        drawLine(history.ampere, "#34d399");
+
+        if (hoverIndex !== null && hoverIndex >= 0 && hoverIndex < history.watt.length) {
+          const x = scaleX(hoverIndex);
+          ctx.strokeStyle = "rgba(226, 232, 240, 0.4)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, 10);
+          ctx.lineTo(x, h - 10);
+          ctx.stroke();
+          const dot = (val, color) => {
+            const y = scaleY(val);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#0f172a";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          };
+          const wVal = history.watt[hoverIndex];
+          const aVal = history.ampere[hoverIndex];
+          if (typeof wVal === "number") dot(wVal, "#38bdf8");
+          if (typeof aVal === "number") dot(aVal, "#34d399");
+        }
+
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "12px \"Space Grotesk\", sans-serif";
+        ctx.fillText("Watt", 12, 18);
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(50, 10, 12, 12);
+        ctx.fillStyle = "#e2e8f0";
+        ctx.fillText("Ampere", 80, 18);
+        ctx.fillStyle = "#34d399";
+        ctx.fillRect(138, 10, 12, 12);
+      };
+
+      const showTooltip = (evt) => {
+        if (!chart || !tooltip) return;
+        const len = history.watt.length;
+        if (!len) return;
+        const rect = chart.getBoundingClientRect();
+        const x = evt.clientX - rect.left;
+        const y = evt.clientY - rect.top;
+        const padding = 10;
+        const usable = rect.width - padding * 2;
+        const idx = Math.max(
+          0,
+          Math.min(len - 1, Math.round(((x - padding) / Math.max(usable, 1)) * (len - 1))),
+        );
+        hoverIndex = idx;
+        const wVal = history.watt[idx];
+        const aVal = history.ampere[idx];
+        const ts = history.ts[idx];
+        if (typeof wVal !== "number" || typeof aVal !== "number") return;
+        tooltip.textContent =
+          new Date(ts).toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          }) +
+          " • " +
+          wVal.toFixed(1) +
+          " W • " +
+          aVal.toFixed(3) +
+          " A";
+        tooltip.style.left = x + "px";
+        tooltip.style.top = y + "px";
+        tooltip.classList.remove("hidden");
+        drawChart();
+      };
+
+      const hideTooltip = () => {
+        if (!tooltip) return;
+        hoverIndex = null;
+        tooltip.classList.add("hidden");
+        drawChart();
       };
 
       const setStatus = (status) => {
@@ -607,6 +796,8 @@ export function buildApp() {
         elTotal.textContent = formatNumber(payload.total_kwh, "kWh", 2);
         elLast.textContent = payload.datetime ?? new Date().toISOString();
         elError.textContent = payload.error ? payload.error : "";
+        pushHistory(payload);
+        drawChart();
       };
 
       let countdownTimer = null;
@@ -670,6 +861,14 @@ export function buildApp() {
       btnOn?.addEventListener("click", () => sendPower(true));
       btnOff?.addEventListener("click", () => sendPower(false));
       btnRefresh?.addEventListener("click", fetchData);
+
+      resizeChart();
+      window.addEventListener("resize", () => {
+        resizeChart();
+        drawChart();
+      });
+      chart?.addEventListener("mousemove", showTooltip);
+      chart?.addEventListener("mouseleave", hideTooltip);
 
       fetchData();
       setInterval(fetchData, refreshMs);

@@ -24,7 +24,7 @@ cp .env.example .env
 
 Catatan: Jika value `KEY` mengandung karakter khusus (mis. `$` atau `'`), gunakan tanda kutip ganda agar tidak salah dibaca.
 Catatan keamanan: jika `TUYA_API_KEY` diisi, semua endpoint `/api/*` wajib mengirim header `x-api-key`. Jika kosong, endpoint tetap terbuka.
-Dashboard `/smartplug` bisa diakses dengan `?key=YOUR_KEY` jika `TUYA_API_KEY` diisi. Interval auto refresh default 2 detik, bisa diubah dengan `?refresh=10` (detik). Dashboard menampilkan countdown dan jam refresh berikutnya.
+Dashboard `/smartplug` bisa diakses dengan `?key=YOUR_KEY` jika `TUYA_API_KEY` diisi. Interval auto refresh default 2 detik, bisa diubah dengan `?refresh=10` (detik). Jumlah titik grafik default 120, bisa diubah dengan `?points=200`. Dashboard menampilkan countdown, jam refresh berikutnya, dan grafik watt/ampere (hover untuk detail).
 
 Contoh isi `.env` (tanpa kredensial asli):
 
@@ -98,6 +98,11 @@ curl "http://localhost:8000/smartplug?key=change_this_key"
 ```bash
 # buka dashboard dengan refresh 10 detik
 curl "http://localhost:8000/smartplug?key=change_this_key&refresh=10"
+```
+
+```bash
+# buka dashboard dengan 200 titik history grafik
+curl "http://localhost:8000/smartplug?key=change_this_key&points=200"
 ```
 ```
 

@@ -28,6 +28,12 @@ Catatan keamanan: jika `TUYA_API_KEY` diisi, semua endpoint `/api/*` wajib mengi
 Contoh isi `.env` (tanpa kredensial asli):
 
 ```env
+# Timezone (default: Asia/Jakarta)
+TZ=Asia/Jakarta
+
+# API key untuk proteksi endpoint ON/OFF (opsional)
+TUYA_API_KEY=change_this_key
+
 # Smartplug device
 TUYA_SMARTPLUG_ID=your_smartplug_id
 TUYA_SMARTPLUG_KEY="your_smartplug_key"
@@ -48,12 +54,6 @@ TUYA_TIMEOUT_MS=5000
 # Scan device Tuya di jaringan (opsional)
 TUYA_SCAN_TIMEOUT_SEC=8
 TUYA_SCAN_VERSIONS=3.3,3.1
-
-# Timezone (default: Asia/Jakarta)
-TZ=Asia/Jakarta
-
-# API key untuk proteksi endpoint ON/OFF (opsional)
-TUYA_API_KEY=change_this_key
 ```
 
 ## Contoh request (curl)

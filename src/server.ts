@@ -643,6 +643,30 @@ export function buildApp() {
         gap: 12px;
         color: var(--muted);
         font-size: 13px;
+        align-items: center;
+      }
+      .refresh-config {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+      }
+      .refresh-config label {
+        font-size: 12px;
+      }
+      #refresh-input {
+        width: 72px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: #0f172a;
+        color: var(--text);
+        font-size: 12px;
+      }
+      #refresh-input:focus {
+        outline: none;
+        border-color: rgba(56, 189, 248, 0.6);
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
       }
       canvas {
         width: 100%;
@@ -859,6 +883,15 @@ export function buildApp() {
       <section class="footer card">
         <div>Last update: <span id="last-update">-</span></div>
         <div>Next refresh: <span id="next-refresh">-</span> <span id="next-refresh-at"></span></div>
+        <div class="refresh-config">
+          <label for="refresh-input">Refresh (detik)</label>
+          <input id="refresh-input" type="number" min="1" step="1" />
+          <button id="refresh-save" class="icon-btn dim" aria-label="Simpan refresh" data-tip="Simpan refresh">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
         <div id="error" class="error"></div>
       </section>
     </div>
@@ -882,6 +915,7 @@ export function buildApp() {
       const maxWatt = Number(dataset.wattMax || "2000") || 2000;
       const maxAmpere = Number(dataset.ampereMax || "10") || 10;
       const headers = {};
+      let refreshTimer = null;
 
       const statusPill = document.getElementById("status-pill");
       const statusText = document.getElementById("status-text");
@@ -893,6 +927,8 @@ export function buildApp() {
       const elNext = document.getElementById("next-refresh");
       const elNextAt = document.getElementById("next-refresh-at");
       const elError = document.getElementById("error");
+      const refreshInput = document.getElementById("refresh-input");
+      const refreshSave = document.getElementById("refresh-save");
       const btnOn = document.getElementById("btn-on");
       const btnOff = document.getElementById("btn-off");
       const btnRefresh = document.getElementById("btn-refresh");
@@ -1193,6 +1229,11 @@ export function buildApp() {
           elNext.textContent = remaining + "s";
         }, 1000);
       };
+      const setRefreshInterval = (ms) => {
+        const safe = Math.max(1000, ms);
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(fetchData, safe);
+      };
 
       const fetchData = async () => {
         try {
@@ -1237,6 +1278,17 @@ export function buildApp() {
       if (btnOff) btnOff.addEventListener("click", () => sendPower(false));
       if (btnRefresh) btnRefresh.addEventListener("click", fetchData);
 
+      if (refreshInput) {
+        refreshInput.value = String(Math.round(refreshMs / 1000));
+      }
+      if (refreshSave && refreshInput) {
+        refreshSave.addEventListener("click", () => {
+          const value = Number(refreshInput.value);
+          const ms = Number.isFinite(value) ? value * 1000 : refreshMs;
+          setRefreshInterval(ms);
+        });
+      }
+
       resizeChart();
       window.addEventListener("resize", () => {
         resizeChart();
@@ -1248,7 +1300,7 @@ export function buildApp() {
       }
 
       fetchData();
-      setInterval(fetchData, refreshMs);
+      setRefreshInterval(refreshMs);
     </script>
   </body>
 </html>`;

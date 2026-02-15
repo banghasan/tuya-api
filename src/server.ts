@@ -651,6 +651,33 @@ export function buildApp() {
       .chart-wrap {
         position: relative;
       }
+      .chart-header {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
+      }
+      .legend {
+        display: inline-flex;
+        gap: 16px;
+        align-items: center;
+        color: #e2e8f0;
+        font-size: 12px;
+      }
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .legend-swatch {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        background: #38bdf8;
+      }
+      .legend-swatch.ampere {
+        background: #34d399;
+      }
       .tooltip {
         position: absolute;
         padding: 8px 10px;
@@ -760,6 +787,12 @@ export function buildApp() {
       </section>
 
       <section class="card chart-card">
+        <div class="chart-header">
+          <div class="legend">
+            <span class="legend-item"><i class="legend-swatch watt"></i>Watt</span>
+            <span class="legend-item"><i class="legend-swatch ampere"></i>Ampere</span>
+          </div>
+        </div>
         <div class="chart-wrap">
           <canvas id="chart" width="900" height="240" aria-label="Grafik watt dan ampere" role="img"></canvas>
           <div id="chart-tooltip" class="tooltip hidden"></div>
@@ -920,15 +953,6 @@ export function buildApp() {
           if (typeof aVal === "number") dot(aVal, "#34d399");
         }
 
-        ctx.fillStyle = "#e2e8f0";
-        ctx.font = '12px "Space Grotesk", sans-serif';
-        ctx.fillText("Watt", 12, 14);
-        ctx.fillStyle = "#38bdf8";
-        ctx.fillRect(50, 6, 12, 12);
-        ctx.fillStyle = "#e2e8f0";
-        ctx.fillText("Ampere", 80, 14);
-        ctx.fillStyle = "#34d399";
-        ctx.fillRect(138, 6, 12, 12);
       };
 
       const showTooltip = (evt) => {

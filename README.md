@@ -1,5 +1,7 @@
 # Tuya Smartplug API
 
+![](./image/smartplug.webp)
+
 ## Menjalankan
 
 ```bash

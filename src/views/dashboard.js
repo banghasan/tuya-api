@@ -1,10 +1,13 @@
-const root = document.querySelector(".shell");
-const dataset = root && root.dataset ? root.dataset : {};
-const requiresKey = dataset.requiresKey === "1";
-const refreshMs = Number(dataset.refresh || "2000") || 2000;
-const maxPoints = Number(dataset.points || "120") || 120;
-const maxWatt = Number(dataset.wattMax || "2000") || 2000;
-const maxAmpere = Number(dataset.ampereMax || "10") || 10;
+const queryParams = new URL(globalThis.location.href).searchParams;
+const parseQueryNumber = (key, fallback) => {
+  const value = Number(queryParams.get(key));
+  return Number.isFinite(value) ? value : fallback;
+};
+const refreshMs = Math.max(1000, parseQueryNumber("refresh", 2) * 1000);
+const maxPoints = Math.max(20, parseQueryNumber("points", 120));
+const maxWatt = Math.max(50, parseQueryNumber("watt_max", 2000));
+const maxAmpere = Math.max(1, parseQueryNumber("ampere_max", 10));
+let requiresKey = false;
 const headers = {};
 let refreshTimer = null;
 
@@ -66,17 +69,16 @@ const hideKeyModal = () => {
   keyModal.classList.add("hidden");
 };
 
-const urlKey = new URL(globalThis.location.href).searchParams.get("key");
-if (urlKey) {
-  setStoredKey(urlKey);
-  const cleanUrl = new URL(globalThis.location.href);
-  cleanUrl.searchParams.delete("key");
-  history.replaceState({}, "", cleanUrl.toString());
-}
-applyHeaders();
-if (requiresKey && !getStoredKey()) {
-  showKeyModal("");
-}
+const loadConfig = async () => {
+  try {
+    const res = await fetch("/api/config");
+    if (!res.ok) return;
+    const data = await res.json();
+    requiresKey = Boolean(data && data.requiresKey);
+  } catch {
+    return;
+  }
+};
 
 if (keySave && keyInput) {
   keySave.addEventListener("click", () => {
@@ -403,15 +405,33 @@ if (refreshSave && refreshInput) {
   });
 }
 
-resizeChart();
-globalThis.addEventListener("resize", () => {
-  resizeChart();
-  drawChart();
-});
-if (chart) {
-  chart.addEventListener("mousemove", showTooltip);
-  chart.addEventListener("mouseleave", hideTooltip);
-}
+const init = async () => {
+  const urlKey = queryParams.get("key");
+  if (urlKey) {
+    setStoredKey(urlKey);
+    const cleanUrl = new URL(globalThis.location.href);
+    cleanUrl.searchParams.delete("key");
+    globalThis.history.replaceState({}, "", cleanUrl.toString());
+  }
 
-fetchData();
-setRefreshInterval(refreshMs);
+  applyHeaders();
+  await loadConfig();
+  if (requiresKey && !getStoredKey()) {
+    showKeyModal("");
+  }
+
+  resizeChart();
+  globalThis.addEventListener("resize", () => {
+    resizeChart();
+    drawChart();
+  });
+  if (chart) {
+    chart.addEventListener("mousemove", showTooltip);
+    chart.addEventListener("mouseleave", hideTooltip);
+  }
+
+  fetchData();
+  setRefreshInterval(refreshMs);
+};
+
+init();

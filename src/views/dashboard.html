@@ -5,19 +5,10 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Smartplug Dashboard</title>
-        <style>
-            {{DASHBOARD_CSS}}
-        </style>
+        <link rel="stylesheet" href="/assets/dashboard.css" />
     </head>
     <body>
-        <div
-            class="shell"
-            data-requires-key="{{REQUIRES_KEY}}"
-            data-refresh="{{REFRESH_MS}}"
-            data-points="{{MAX_POINTS}}"
-            data-watt-max="{{MAX_WATT}}"
-            data-ampere-max="{{MAX_AMPERE}}"
-        >
+        <div class="shell">
             <header>
                 <div class="title">
                     <h1>Smartplug Dashboard</h1>
@@ -312,12 +303,6 @@
                 <div id="key-error" class="error"></div>
             </div>
         </div>
-        <script>
-            {
-                {
-                    DASHBOARD_JS;
-                }
-            }
-        </script>
+        <script src="/assets/dashboard.js" defer></script>
     </body>
 </html>

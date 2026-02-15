@@ -9,6 +9,7 @@ Kembali ke [README utama](../README.md) · [Dokumentasi](README.md).
 | GET      | `/`                      | Health check                              | Tidak                                   |
 | GET      | `/health`                | Health check (JSON)                       | Tidak                                   |
 | GET      | `/smartplug`             | Dashboard monitoring                      | Query `?key=` jika `TUYA_API_KEY` diisi |
+| GET      | `/api/config`            | Info konfigurasi publik (requiresKey)     | Tidak                                   |
 | GET      | `/api/smartplug/current` | Status lengkap smartplug + metrik listrik | Header `x-api-key`                      |
 | GET      | `/api/smartplug/status`  | Status smartplug (boolean)                | Header `x-api-key`                      |
 | GET/POST | `/api/smartplug/on`      | Nyalakan smartplug                        | Header `x-api-key`                      |
@@ -42,6 +43,10 @@ curl http://localhost:8000/
 
 ```bash
 curl http://localhost:8000/health
+```
+
+```bash
+curl http://localhost:8000/api/config
 ```
 
 ### Dashboard

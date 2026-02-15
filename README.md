@@ -1,6 +1,6 @@
 # Tuya Smartplug API
 
-![](./image/smartplug.webp)
+![smartplug](./image/smartplug.webp)
 
 ## Menjalankan
 
@@ -66,6 +66,7 @@ TUYA_SCAN_VERSIONS=3.3,3.1
 | Method | URL | Deskripsi | Auth |
 | --- | --- | --- | --- |
 | GET | `/` | Health check | Tidak |
+| GET | `/health` | Health check (JSON) | Tidak |
 | GET | `/smartplug` | Dashboard monitoring smartplug | Query `?key=` jika `TUYA_API_KEY` diisi |
 | GET | `/api/smartplug/current` | Status lengkap smartplug + metrik listrik | Header `x-api-key` |
 | GET | `/api/smartplug/status` | Status smartplug (boolean) | Header `x-api-key` |

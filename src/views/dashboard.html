@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smartplug Dashboard</title>
+    <style>
+{{DASHBOARD_CSS}}
+    </style>
+  </head>
+  <body>
+    <div class="shell" data-requires-key="{{REQUIRES_KEY}}" data-refresh="{{REFRESH_MS}}" data-points="{{MAX_POINTS}}" data-watt-max="{{MAX_WATT}}" data-ampere-max="{{MAX_AMPERE}}">
+      <header>
+        <div class="title">
+          <h1>Smartplug Dashboard</h1>
+          <div class="subtitle">Monitoring real-time smartplug Tuya</div>
+        </div>
+        <div class="status-wrap">
+          <div id="status-pill" class="status-pill">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="status-text">Muat data...</span>
+          </div>
+          <div class="icon-actions">
+            <button id="btn-on" class="icon-btn primary" aria-label="Nyalakan" data-tip="Nyalakan">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v6m4.24-3.76a8 8 0 1 1-8.48 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button id="btn-off" class="icon-btn danger" aria-label="Matikan" data-tip="Matikan">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v6m4.24-3.76a8 8 0 1 1-8.48 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M5 19l14-14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button id="btn-refresh" class="icon-btn" aria-label="Refresh" data-tip="Refresh">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button id="btn-key" class="icon-btn dim" aria-label="Ganti API Key" data-tip="Ganti API Key">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 3l-8.5 8.5a4.5 4.5 0 1 1-1.5-1.5L19.5 1.5 21 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 7l1 1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section class="card">
+        <div class="grid">
+          <div class="stat gauge">
+            <span>Daya</span>
+            <div class="gauge-wrap">
+              <svg id="watt-gauge" viewBox="0 0 220 220" aria-label="Watt gauge" role="img">
+                <defs>
+                  <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#22d3ee"></stop>
+                    <stop offset="50%" stop-color="#38bdf8"></stop>
+                    <stop offset="100%" stop-color="#f87171"></stop>
+                  </linearGradient>
+                </defs>
+                <circle class="gauge-track" cx="110" cy="110" r="90"></circle>
+                <circle class="gauge-arc" id="gauge-arc" cx="110" cy="110" r="90"></circle>
+              </svg>
+              <div class="gauge-center">
+                <div class="gauge-value" id="watt">-</div>
+                <div class="gauge-meta" id="watt-meta">Max - W</div>
+              </div>
+            </div>
+          </div>
+          <div class="stat gauge">
+            <span>Arus</span>
+            <div class="gauge-wrap">
+              <svg id="ampere-gauge" viewBox="0 0 220 220" aria-label="Ampere gauge" role="img">
+                <defs>
+                  <linearGradient id="ampereGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#34d399"></stop>
+                    <stop offset="50%" stop-color="#a3e635"></stop>
+                    <stop offset="100%" stop-color="#facc15"></stop>
+                  </linearGradient>
+                </defs>
+                <circle class="gauge-track" cx="110" cy="110" r="90"></circle>
+                <circle class="gauge-arc ampere" id="gauge-ampere" cx="110" cy="110" r="90"></circle>
+              </svg>
+              <div class="gauge-center">
+                <div class="gauge-value" id="ampere">-</div>
+                <div class="gauge-meta" id="ampere-meta">Max - A</div>
+              </div>
+            </div>
+          </div>
+          <div class="stat">
+            <span>Tegangan</span>
+            <strong id="volt">-</strong>
+          </div>
+          <div class="stat">
+            <span>Total kWh</span>
+            <strong id="total">-</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card chart-card">
+        <div class="chart-header">
+          <div class="legend">
+            <span class="legend-item"><i class="legend-swatch watt"></i>Watt</span>
+            <span class="legend-item"><i class="legend-swatch ampere"></i>Ampere</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart" width="900" height="240" aria-label="Grafik watt dan ampere" role="img"></canvas>
+          <div id="chart-tooltip" class="tooltip hidden"></div>
+        </div>
+      </section>
+
+      <section class="footer card">
+        <div>Last update: <span id="last-update">-</span></div>
+        <div>Next refresh: <span id="next-refresh">-</span> <span id="next-refresh-at"></span></div>
+        <div class="refresh-config">
+          <label for="refresh-input">Refresh (detik)</label>
+          <input id="refresh-input" type="number" min="1" step="1" />
+          <button id="refresh-save" class="icon-btn dim" aria-label="Simpan refresh" data-tip="Simpan refresh">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div id="error" class="error"></div>
+      </section>
+    </div>
+    <div id="key-modal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <div class="modal-title">Masukkan API Key</div>
+        <div class="modal-subtitle">Key disimpan di session browser (tidak tampil di URL).</div>
+        <input id="key-input" type="password" placeholder="TUYA_API_KEY" autocomplete="off" />
+        <div class="modal-actions">
+          <button id="key-save" class="icon-btn primary">Simpan</button>
+        </div>
+        <div id="key-error" class="error"></div>
+      </div>
+    </div>
+    <script>
+{{DASHBOARD_JS}}
+    </script>
+  </body>
+</html>

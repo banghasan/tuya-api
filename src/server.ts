@@ -12,6 +12,7 @@ type TuyaDevice = {
   connect: () => Promise<void>;
   get: (options?: unknown) => Promise<unknown>;
   disconnect: () => void;
+  on?: (event: string, listener: (...args: unknown[]) => void) => void;
 };
 
 type TuyaFactory = (options: Record<string, unknown>) => TuyaDevice;
@@ -33,6 +34,14 @@ export function resetTuyaFactoryForTest() {
 
 function createTuya(options: Record<string, unknown>): TuyaDevice {
   return tuyaFactory(options);
+}
+
+function attachTuyaErrorHandler(device: TuyaDevice, label: string) {
+  if (typeof device.on !== "function") return;
+  device.on("error", (err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`[tuya] ${label} error: ${message}`);
+  });
 }
 
 function requireEnv(key: string): string {
@@ -155,21 +164,25 @@ async function withTimeout<T>(label: string, promise: Promise<T>): Promise<T> {
 }
 
 function createSmartplugDevice() {
-  return createTuya({
+  const device = createTuya({
     id: requireEnv("TUYA_SMARTPLUG_ID"),
     key: requireEnv("TUYA_SMARTPLUG_KEY"),
     ip: requireEnv("TUYA_SMARTPLUG_IP"),
     version: requireEnv("TUYA_SMARTPLUG_VERSION"),
   });
+  attachTuyaErrorHandler(device, "smartplug");
+  return device;
 }
 
 function createIrblasterDevice() {
-  return createTuya({
+  const device = createTuya({
     id: requireEnv("TUYA_IRBLASTER_ID"),
     key: requireEnv("TUYA_IRBLASTER_KEY"),
     ip: requireEnv("TUYA_IRBLASTER_IP"),
     version: requireEnv("TUYA_IRBLASTER_VERSION"),
   });
+  attachTuyaErrorHandler(device, "irblaster");
+  return device;
 }
 
 async function getSmartplugData() {
@@ -209,6 +222,21 @@ async function getSmartplugData() {
   }
 }
 
+function buildSmartplugOffline(errorMessage: string) {
+  const { datetime, timezone } = formatDateTimeTZ(new Date());
+  return {
+    datetime,
+    timezone,
+    status: "OFFLINE",
+    watt: null,
+    volt: null,
+    ampere: null,
+    total_kwh: null,
+    raw_dps: {},
+    error: errorMessage,
+  };
+}
+
 async function getIrblasterData() {
   const device = createIrblasterDevice();
   try {
@@ -246,6 +274,7 @@ async function scanTuyaDevices(query: URLSearchParams) {
       key: "0123456789abcdef",
       version,
     });
+    attachTuyaErrorHandler(scanner, `scan-v${version}`);
 
     try {
       const found = await scanner.find({ all: true, timeout: timeoutSec });
@@ -278,7 +307,7 @@ export function buildApp() {
       return c.json(result);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return c.json({ error: message }, 500);
+      return c.json(buildSmartplugOffline(message));
     }
   });
 
@@ -292,7 +321,8 @@ export function buildApp() {
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return c.json({ error: message }, 500);
+      const { datetime, timezone } = formatDateTimeTZ(new Date());
+      return c.json({ datetime, timezone, status: false, error: message });
     }
   });
 

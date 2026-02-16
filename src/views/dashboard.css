@@ -393,6 +393,10 @@ canvas {
     justify-content: flex-end;
 }
 .modal-actions.confirm {
-    justify-content: space-between;
-    gap: 12px;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.modal-actions.confirm .icon-btn {
+    width: 150px;
+    min-width: 150px;
 }

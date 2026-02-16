@@ -30,7 +30,10 @@ function buildBinaryResponse(
   content: Uint8Array,
   contentType: string,
 ): Response {
-  return new Response(content, {
+  const copy = new Uint8Array(content.length);
+  copy.set(content);
+  const body = new Blob([copy.buffer]);
+  return new Response(body, {
     headers: {
       "content-type": contentType,
       "cache-control": "public, max-age=300",

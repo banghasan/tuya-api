@@ -9,9 +9,13 @@ import {
   dashboardJs,
   dashboardAppleTouch,
 } from "../controllers/assets.ts";
+import { getVersion } from "../version.ts";
 
 export function registerPageRoutes(app: Hono) {
-  app.get("/", (c) => c.text("Tuya API: OK"));
+  app.get("/", async (c) => {
+    const version = await getVersion();
+    return c.json({ status: "ok", version });
+  });
   app.get("/favicon.ico", () => dashboardFaviconIco());
   app.get("/smartplug", dashboardHandler);
   app.get("/assets/dashboard.css", () => dashboardCss());

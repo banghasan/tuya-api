@@ -10,6 +10,9 @@
     "start": "deno run -A src/server.ts",
     "test": "deno test -A",
     "lint": "deno lint",
-    "format": "deno fmt"
+    "format": "deno fmt",
+    "version:dump": "deno run -A scripts/version.ts dump",
+    "version:bump": "deno run -A scripts/version.ts bump",
+    "version": "deno run -A scripts/version.ts"
   }
 }

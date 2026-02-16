@@ -1,6 +1,8 @@
 const queryParams = new URL(globalThis.location.href).searchParams;
 const parseQueryNumber = (key, fallback) => {
-  const value = Number(queryParams.get(key));
+  const raw = queryParams.get(key);
+  if (raw === null || raw === "") return fallback;
+  const value = Number(raw);
   return Number.isFinite(value) ? value : fallback;
 };
 const refreshMs = Math.max(1000, parseQueryNumber("refresh", 2) * 1000);

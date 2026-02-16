@@ -200,6 +200,7 @@ const drawChart = () => {
   const h = chart.height;
   const padding = 18;
   const innerH = h - padding * 2;
+  const scale = globalThis.devicePixelRatio || 1;
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = "#0f172a";
   ctx.fillRect(0, 0, w, h);
@@ -212,30 +213,41 @@ const drawChart = () => {
     ctx.lineTo(w, y);
     ctx.stroke();
   }
+  ctx.fillStyle = "rgba(159,176,199,0.85)";
+  ctx.font = `${Math.round(11 * scale)}px "Space Grotesk", "Segoe UI", system-ui, sans-serif`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  for (let i = 0; i <= 4; i++) {
+    const y = padding + (innerH / 4) * i;
+    const pct = 100 - i * 25;
+    ctx.fillText(`${pct}%`, 6 * scale, y);
+  }
   const values = history.watt.concat(history.ampere);
   if (!values.length) return;
-  const maxValue = Math.max(...values, 1);
-  const minValue = 0;
-  const scaleY = (val) =>
-    h - padding - ((val - minValue) / (maxValue - minValue)) * innerH;
+  const safeMaxWatt = Math.max(maxWatt, 1);
+  const safeMaxAmpere = Math.max(maxAmpere, 1);
+  const normalizeWatt = (val) => Math.max(0, Math.min(val / safeMaxWatt, 1));
+  const normalizeAmpere = (val) =>
+    Math.max(0, Math.min(val / safeMaxAmpere, 1));
+  const scaleY = (pct) => h - padding - pct * innerH;
   const scaleX = (idx) =>
     (w - padding * 2) * (idx / Math.max(history.watt.length - 1, 1)) + padding;
 
-  const drawLine = (arr, color) => {
+  const drawLine = (arr, color, normalizer) => {
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
     arr.forEach((val, idx) => {
       const x = scaleX(idx);
-      const y = scaleY(val);
+      const y = scaleY(normalizer(val));
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
     ctx.stroke();
   };
 
-  drawLine(history.watt, "#f87171");
-  drawLine(history.ampere, "#facc15");
+  drawLine(history.watt, "#f87171", normalizeWatt);
+  drawLine(history.ampere, "#facc15", normalizeAmpere);
 
   if (
     hoverIndex !== null &&
@@ -249,8 +261,8 @@ const drawChart = () => {
     ctx.moveTo(x, padding);
     ctx.lineTo(x, h - padding);
     ctx.stroke();
-    const dot = (val, color) => {
-      const y = scaleY(val);
+    const dot = (val, color, normalizer) => {
+      const y = scaleY(normalizer(val));
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
@@ -261,8 +273,8 @@ const drawChart = () => {
     };
     const wVal = history.watt[hoverIndex];
     const aVal = history.ampere[hoverIndex];
-    if (typeof wVal === "number") dot(wVal, "#f87171");
-    if (typeof aVal === "number") dot(aVal, "#facc15");
+    if (typeof wVal === "number") dot(wVal, "#f87171", normalizeWatt);
+    if (typeof aVal === "number") dot(aVal, "#facc15", normalizeAmpere);
   }
 };
 

@@ -195,6 +195,7 @@ const pushHistory = (payload) => {
 
 let hoverIndex = null;
 let currentStatus = "UNKNOWN";
+let errorTimer = null;
 const drawChart = () => {
   if (!ctx || !chart) return;
   const w = chart.width;
@@ -348,6 +349,19 @@ const setStatus = (status) => {
   if (statusText) statusText.textContent = currentStatus;
   if (statusPill) statusPill.classList.toggle("off", currentStatus !== "ON");
 };
+const showError = (message, timeoutMs = 3000) => {
+  if (!elError) return;
+  elError.textContent = message || "";
+  if (errorTimer) clearTimeout(errorTimer);
+  if (message) {
+    errorTimer = setTimeout(() => {
+      elError.textContent = "";
+      errorTimer = null;
+    }, timeoutMs);
+  } else {
+    errorTimer = null;
+  }
+};
 
 const updateUI = (payload) => {
   setStatus(payload && payload.status ? payload.status : "UNKNOWN");
@@ -357,7 +371,7 @@ const updateUI = (payload) => {
   elTotal.textContent = formatNumber(payload.total_kwh, "kWh", 2);
   elLast.textContent =
     payload && payload.datetime ? payload.datetime : new Date().toISOString();
-  elError.textContent = payload && payload.error ? payload.error : "";
+  showError(payload && payload.error ? payload.error : "", 9000);
   if (payload) {
     const r = 90;
     const circumference = 2 * Math.PI * r;
@@ -418,8 +432,7 @@ const fetchData = async () => {
     startCountdown();
   } catch (err) {
     setStatus("OFFLINE");
-    elError.textContent =
-      err && err.message ? err.message : "Gagal memuat data";
+    showError(err && err.message ? err.message : "Gagal memuat data", 9000);
   }
 };
 
@@ -438,8 +451,7 @@ const sendPower = async (on) => {
     const data = await res.json();
     updateUI(data);
   } catch (err) {
-    elError.textContent =
-      err && err.message ? err.message : "Gagal mengubah status";
+    showError(err && err.message ? err.message : "Gagal mengubah status", 9000);
   } finally {
     btnOn.disabled = false;
     btnOff.disabled = false;
@@ -457,7 +469,7 @@ const setRefreshInterval = (ms) => {
 if (btnOn) {
   btnOn.addEventListener("click", () => {
     if (currentStatus === "ON") {
-      if (elError) elError.textContent = "Smartplug sudah kondisi ON.";
+      showError("Smartplug sudah kondisi ON.");
       return;
     }
     showConfirm(true);

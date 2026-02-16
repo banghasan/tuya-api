@@ -8,7 +8,7 @@ dengan dashboard real-time.
 ## Fitur
 
 - Endpoint ON/OFF + status perangkat.
-- Dashboard `/smartplug` dengan grafik watt/ampere dan refresh otomatis.
+- Dashboard `/smartplug` dengan grafik watt/ampere dan refresh otomatis (default 10 detik).
 - Proteksi API key opsional via header `x-api-key`.
 - Endpoint root `/` mengembalikan versi aplikasi (JSON).
 

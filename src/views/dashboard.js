@@ -89,6 +89,10 @@ const showConfirm = (on) => {
   }
   confirmModal.classList.remove("hidden");
   confirmModal.dataset.action = on ? "on" : "off";
+  const focusTarget = on ? confirmOk : confirmCancel;
+  if (focusTarget && typeof focusTarget.focus === "function") {
+    focusTarget.focus();
+  }
 };
 const hideConfirm = () => {
   if (!confirmModal) return;

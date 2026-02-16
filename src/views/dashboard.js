@@ -40,6 +40,11 @@ const keyModal = document.getElementById("key-modal");
 const keyInput = document.getElementById("key-input");
 const keySave = document.getElementById("key-save");
 const keyError = document.getElementById("key-error");
+const confirmModal = document.getElementById("confirm-modal");
+const confirmTitle = document.getElementById("confirm-title");
+const confirmDesc = document.getElementById("confirm-desc");
+const confirmCancel = document.getElementById("confirm-cancel");
+const confirmOk = document.getElementById("confirm-ok");
 
 const getStoredKey = () => {
   try {
@@ -69,6 +74,26 @@ const showKeyModal = (message) => {
 const hideKeyModal = () => {
   if (!keyModal) return;
   keyModal.classList.add("hidden");
+};
+const showConfirm = (on) => {
+  if (!confirmModal) return;
+  const action = on ? "Nyalakan" : "Matikan";
+  if (confirmTitle) confirmTitle.textContent = "Konfirmasi";
+  if (confirmDesc) {
+    confirmDesc.textContent = `${action} smartplug sekarang?`;
+  }
+  if (confirmOk) {
+    confirmOk.textContent = action;
+    confirmOk.classList.toggle("primary", on);
+    confirmOk.classList.toggle("danger", !on);
+  }
+  confirmModal.classList.remove("hidden");
+  confirmModal.dataset.action = on ? "on" : "off";
+};
+const hideConfirm = () => {
+  if (!confirmModal) return;
+  confirmModal.classList.add("hidden");
+  delete confirmModal.dataset.action;
 };
 
 const loadConfig = async () => {
@@ -258,12 +283,13 @@ const showTooltip = (evt) => {
   const aVal = history.ampere[idx];
   const ts = history.ts[idx];
   if (typeof wVal !== "number" || typeof aVal !== "number") return;
-  tooltip.textContent = new Date(ts).toLocaleTimeString("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }) +
+  tooltip.textContent =
+    new Date(ts).toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }) +
     " • " +
     wVal.toFixed(1) +
     " W • " +
@@ -293,9 +319,8 @@ const updateUI = (payload) => {
   elVolt.textContent = formatNumber(payload.volt, "V", 1);
   elAmpere.textContent = formatGauge(payload.ampere, "A", 3);
   elTotal.textContent = formatNumber(payload.total_kwh, "kWh", 2);
-  elLast.textContent = payload && payload.datetime
-    ? payload.datetime
-    : new Date().toISOString();
+  elLast.textContent =
+    payload && payload.datetime ? payload.datetime : new Date().toISOString();
   elError.textContent = payload && payload.error ? payload.error : "";
   if (payload) {
     const r = 90;
@@ -325,7 +350,8 @@ const startCountdown = () => {
   const nextAt = new Date(Date.now() + refreshMs);
   elNext.textContent = remaining + "s";
   if (elNextAt) {
-    elNextAt.textContent = "(" +
+    elNextAt.textContent =
+      "(" +
       nextAt.toLocaleTimeString("id-ID", {
         hour: "2-digit",
         minute: "2-digit",
@@ -356,9 +382,8 @@ const fetchData = async () => {
     startCountdown();
   } catch (err) {
     setStatus("OFFLINE");
-    elError.textContent = err && err.message
-      ? err.message
-      : "Gagal memuat data";
+    elError.textContent =
+      err && err.message ? err.message : "Gagal memuat data";
   }
 };
 
@@ -377,9 +402,8 @@ const sendPower = async (on) => {
     const data = await res.json();
     updateUI(data);
   } catch (err) {
-    elError.textContent = err && err.message
-      ? err.message
-      : "Gagal mengubah status";
+    elError.textContent =
+      err && err.message ? err.message : "Gagal mengubah status";
   } finally {
     btnOn.disabled = false;
     btnOff.disabled = false;
@@ -392,9 +416,29 @@ const setRefreshInterval = (ms) => {
   refreshTimer = setInterval(fetchData, safe);
 };
 
-if (btnOn) btnOn.addEventListener("click", () => sendPower(true));
-if (btnOff) btnOff.addEventListener("click", () => sendPower(false));
+if (btnOn) btnOn.addEventListener("click", () => showConfirm(true));
+if (btnOff) btnOff.addEventListener("click", () => showConfirm(false));
 if (btnRefresh) btnRefresh.addEventListener("click", fetchData);
+if (confirmCancel) confirmCancel.addEventListener("click", hideConfirm);
+if (confirmOk) {
+  confirmOk.addEventListener("click", () => {
+    const action = confirmModal?.dataset.action;
+    hideConfirm();
+    if (action === "on") sendPower(true);
+    if (action === "off") sendPower(false);
+  });
+}
+if (confirmModal) {
+  confirmModal.addEventListener("click", (event) => {
+    if (event.target === confirmModal) hideConfirm();
+  });
+}
+globalThis.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (confirmModal && !confirmModal.classList.contains("hidden")) {
+    hideConfirm();
+  }
+});
 
 if (refreshInput) {
   refreshInput.value = String(Math.round(refreshMs / 1000));

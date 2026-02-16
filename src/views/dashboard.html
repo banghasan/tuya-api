@@ -349,6 +349,27 @@
                 <div id="key-error" class="error"></div>
             </div>
         </div>
+        <div
+            id="confirm-modal"
+            class="modal hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-title"
+            aria-describedby="confirm-desc"
+        >
+            <div class="modal-card">
+                <div class="modal-title" id="confirm-title">Konfirmasi</div>
+                <div class="modal-subtitle" id="confirm-desc">
+                    Tindakan ini akan mengubah status smartplug.
+                </div>
+                <div class="modal-actions confirm">
+                    <button id="confirm-cancel" class="icon-btn dim">
+                        Batal
+                    </button>
+                    <button id="confirm-ok" class="icon-btn primary">Ya</button>
+                </div>
+            </div>
+        </div>
         <script src="/assets/dashboard.js" defer></script>
     </body>
 </html>

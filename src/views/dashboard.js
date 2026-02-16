@@ -265,9 +265,24 @@ const drawChart = () => {
     });
     ctx.stroke();
   };
+  const drawPoints = (arr, color, normalizer) => {
+    ctx.fillStyle = color;
+    arr.forEach((val, idx) => {
+      const x = scaleX(idx);
+      const y = scaleY(normalizer(val));
+      ctx.beginPath();
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+  };
 
   drawLine(history.watt, "#f87171", normalizeWatt);
   drawLine(history.ampere, "#facc15", normalizeAmpere);
+  drawPoints(history.watt, "#f87171", normalizeWatt);
+  drawPoints(history.ampere, "#facc15", normalizeAmpere);
 
   if (
     hoverIndex !== null &&

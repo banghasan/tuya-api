@@ -194,6 +194,7 @@ const pushHistory = (payload) => {
 };
 
 let hoverIndex = null;
+let currentStatus = "UNKNOWN";
 const drawChart = () => {
   if (!ctx || !chart) return;
   const w = chart.width;
@@ -343,8 +344,9 @@ const hideTooltip = () => {
 };
 
 const setStatus = (status) => {
-  if (statusText) statusText.textContent = status;
-  if (statusPill) statusPill.classList.toggle("off", status !== "ON");
+  currentStatus = status || "UNKNOWN";
+  if (statusText) statusText.textContent = currentStatus;
+  if (statusPill) statusPill.classList.toggle("off", currentStatus !== "ON");
 };
 
 const updateUI = (payload) => {
@@ -452,7 +454,15 @@ const setRefreshInterval = (ms) => {
   startCountdown();
 };
 
-if (btnOn) btnOn.addEventListener("click", () => showConfirm(true));
+if (btnOn) {
+  btnOn.addEventListener("click", () => {
+    if (currentStatus === "ON") {
+      if (elError) elError.textContent = "Smartplug sudah kondisi ON.";
+      return;
+    }
+    showConfirm(true);
+  });
+}
 if (btnOff) btnOff.addEventListener("click", () => showConfirm(false));
 if (btnRefresh) btnRefresh.addEventListener("click", fetchData);
 if (confirmCancel) confirmCancel.addEventListener("click", hideConfirm);

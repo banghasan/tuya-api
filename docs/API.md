@@ -6,7 +6,7 @@ Kembali ke [README utama](../README.md) · [Dokumentasi](README.md).
 
 | Method   | URL                      | Deskripsi                                 | Auth                                    |
 | -------- | ------------------------ | ----------------------------------------- | --------------------------------------- |
-| GET      | `/`                      | Health check                              | Tidak                                   |
+| GET      | `/`                      | Health check + version (JSON)             | Tidak                                   |
 | GET      | `/health`                | Health check (JSON)                       | Tidak                                   |
 | GET      | `/smartplug`             | Dashboard monitoring                      | Query `?key=` jika `TUYA_API_KEY` diisi |
 | GET      | `/api/config`            | Info konfigurasi publik (requiresKey)     | Tidak                                   |
@@ -39,6 +39,12 @@ Jika API key salah/tidak dikirim:
 
 ```bash
 curl http://localhost:8000/
+```
+
+Response:
+
+```json
+{ "status": "ok", "version": "1.0.0" }
 ```
 
 ```bash

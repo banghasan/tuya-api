@@ -10,6 +10,7 @@ dengan dashboard real-time.
 - Endpoint ON/OFF + status perangkat.
 - Dashboard `/smartplug` dengan grafik watt/ampere dan refresh otomatis.
 - Proteksi API key opsional via header `x-api-key`.
+- Endpoint root `/` mengembalikan versi aplikasi (JSON).
 
 ## Cepat Mulai
 
@@ -37,6 +38,20 @@ deno task lint
 
 deno task format
 ```
+
+## Versi Aplikasi
+
+- Sumber versi: file `VERSION`.
+- Cek versi (interactive): `deno task version`.
+- Dump versi saja: `deno task version:dump`.
+- Bump versi langsung: `deno task version:bump -- patch|minor|major`.
+
+`deno task version` akan menampilkan versi sekarang lalu menawarkan pilihan:
+
+- `0` batal.
+- `1` patch: perbaikan kecil/bugfix.
+- `2` minor: fitur baru kompatibel.
+- `3` major: perubahan besar (breaking).
 
 ## Struktur Direktori
 

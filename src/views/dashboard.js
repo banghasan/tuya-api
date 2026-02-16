@@ -5,7 +5,7 @@ const parseQueryNumber = (key, fallback) => {
   const value = Number(raw);
   return Number.isFinite(value) ? value : fallback;
 };
-const refreshMs = Math.max(1000, parseQueryNumber("refresh", 2) * 1000);
+let refreshMs = Math.max(1000, parseQueryNumber("refresh", 10) * 1000);
 const maxPoints = Math.max(20, parseQueryNumber("points", 120));
 const maxWatt = Math.max(50, parseQueryNumber("watt_max", 2000));
 const maxAmpere = Math.max(1, parseQueryNumber("ampere_max", 10));
@@ -416,8 +416,10 @@ const sendPower = async (on) => {
 
 const setRefreshInterval = (ms) => {
   const safe = Math.max(1000, ms);
+  refreshMs = safe;
   if (refreshTimer) clearInterval(refreshTimer);
   refreshTimer = setInterval(fetchData, safe);
+  startCountdown();
 };
 
 if (btnOn) btnOn.addEventListener("click", () => showConfirm(true));

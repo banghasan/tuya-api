@@ -215,20 +215,38 @@ const drawChart = () => {
   }
   ctx.fillStyle = "rgba(159,176,199,0.85)";
   ctx.font = `${Math.round(11 * scale)}px "Space Grotesk", "Segoe UI", system-ui, sans-serif`;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  for (let i = 0; i <= 4; i++) {
-    const y = padding + (innerH / 4) * i;
-    const pct = 100 - i * 25;
-    ctx.fillText(`${pct}%`, 6 * scale, y);
-  }
   const values = history.watt.concat(history.ampere);
   if (!values.length) return;
-  const safeMaxWatt = Math.max(maxWatt, 1);
-  const safeMaxAmpere = Math.max(maxAmpere, 1);
+  const scaleWindow = 60;
+  const getWindowMax = (arr) => {
+    const start = Math.max(0, arr.length - scaleWindow);
+    let max = 0;
+    for (let i = start; i < arr.length; i++) {
+      const val = arr[i];
+      if (typeof val === "number" && val > max) max = val;
+    }
+    return Math.max(max, 1);
+  };
+  const headroom = 1.15;
+  const safeMaxWatt = getWindowMax(history.watt) * headroom;
+  const safeMaxAmpere = getWindowMax(history.ampere) * headroom;
   const normalizeWatt = (val) => Math.max(0, Math.min(val / safeMaxWatt, 1));
   const normalizeAmpere = (val) =>
     Math.max(0, Math.min(val / safeMaxAmpere, 1));
+  const formatAxisValue = (value, unit) => {
+    if (unit === "W") return `${Math.round(value)}W`;
+    const digits = value < 1 ? 3 : value < 10 ? 2 : 1;
+    return `${value.toFixed(digits)}A`;
+  };
+  ctx.textBaseline = "middle";
+  for (let i = 0; i <= 4; i++) {
+    const y = padding + (innerH / 4) * i;
+    const ratio = 1 - i / 4;
+    ctx.textAlign = "left";
+    ctx.fillText(formatAxisValue(safeMaxWatt * ratio, "W"), 6 * scale, y);
+    ctx.textAlign = "right";
+    ctx.fillText(formatAxisValue(safeMaxAmpere * ratio, "A"), w - 6 * scale, y);
+  }
   const scaleY = (pct) => h - padding - pct * innerH;
   const scaleX = (idx) =>
     (w - padding * 2) * (idx / Math.max(history.watt.length - 1, 1)) + padding;
